@@ -14,9 +14,13 @@ export interface PreferencesStore {
   forceCompactEpisodeView: boolean;
   sourceOrder: string[];
   enableSourceOrder: boolean;
+  embedOrder: string[];
+  enableEmbedOrder: boolean;
   proxyTmdb: boolean;
   febboxKey: string | null;
   realDebridKey: string | null;
+  enableLowPerformanceMode: boolean;
+  enableNativeSubtitles: boolean;
 
   setEnableThumbnails(v: boolean): void;
   setEnableAutoplay(v: boolean): void;
@@ -29,9 +33,13 @@ export interface PreferencesStore {
   setForceCompactEpisodeView(v: boolean): void;
   setSourceOrder(v: string[]): void;
   setEnableSourceOrder(v: boolean): void;
+  setEmbedOrder(v: string[]): void;
+  setEnableEmbedOrder(v: boolean): void;
   setProxyTmdb(v: boolean): void;
   setFebboxKey(v: string | null): void;
   setRealDebridKey(v: string | null): void;
+  setEnableLowPerformanceMode(v: boolean): void;
+  setEnableNativeSubtitles(v: boolean): void;
 }
 
 export const usePreferencesStore = create(
@@ -48,9 +56,13 @@ export const usePreferencesStore = create(
       forceCompactEpisodeView: false,
       sourceOrder: [],
       enableSourceOrder: false,
+      embedOrder: [],
+      enableEmbedOrder: false,
       proxyTmdb: false,
       febboxKey: null,
       realDebridKey: null,
+      enableLowPerformanceMode: false,
+      enableNativeSubtitles: false,
       setEnableThumbnails(v) {
         set((s) => {
           s.enableThumbnails = v;
@@ -106,6 +118,16 @@ export const usePreferencesStore = create(
           s.enableSourceOrder = v;
         });
       },
+      setEmbedOrder(v) {
+        set((s) => {
+          s.embedOrder = v;
+        });
+      },
+      setEnableEmbedOrder(v) {
+        set((s) => {
+          s.enableEmbedOrder = v;
+        });
+      },
       setProxyTmdb(v) {
         set((s) => {
           s.proxyTmdb = v;
@@ -119,6 +141,16 @@ export const usePreferencesStore = create(
       setRealDebridKey(v) {
         set((s) => {
           s.realDebridKey = v;
+        });
+      },
+      setEnableLowPerformanceMode(v) {
+        set((s) => {
+          s.enableLowPerformanceMode = v;
+        });
+      },
+      setEnableNativeSubtitles(v) {
+        set((s) => {
+          s.enableNativeSubtitles = v;
         });
       },
     })),
