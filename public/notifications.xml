@@ -9,6 +9,89 @@
     <atom:link href="https://pstream.mov/notifications.xml" rel="self" type="application/rss+xml" />
 
     <item>
+      <guid>notification-041</guid>
+      <title>Firefox Extension is back in the store!</title>
+      <description>The Firefox extension is back in the store! You can now update it to the latest version.
+
+You’ll need to REPLACE the old one with this one to get future updates. But the old one will also work fine, it’ll just have a warning. HAVING BOTH BREAKS THE SITE, so pick one!
+
+Sorry again!
+(link below)
+      </description>
+      <link>https://addons.mozilla.org/addon/pstream-extension/</link>
+      <pubDate>Wed, 10 Sep 2025 13:00:00 MST</pubDate>
+      <category>announcement</category>
+    </item>
+
+    <item>
+      <guid>notification-040</guid>
+      <title>Extension issue for Firefox!</title>
+      <description>If you're using Firefox with the P-Stream extension, you may have noticed that it says updates are unavailable and that the extension is violating policies. Yikes!
+
+Heres what happened: I accidently deleted my Firefox account that had the P-Stream extension. 
+The extension did NOT violate any policies, it was just deleted. For some it says that when it gets removed.
+
+I just created a new account and re-submitted it, so it should be back in the store soon. I'll post here when it is.
+Just to clarify, the extension is still working perfectly fine, it's just the updates that are not working. When the extension is back in the store, you can update it to the latest version.
+
+The whole story behind me accidentally deleting my Firefox account is on our Discord server, feel free to ask there! (link below)
+
+I apologize for the inconvenience!</description>
+      <link>https://discord.gg/7z6znYgrTG</link>
+      <pubDate>Mon, 08 Sep 2025 16:00:00 MST</pubDate>
+      <category>announcement</category>
+    </item>
+
+    <item>
+      <guid>notification-039</guid>
+      <title>Help support P-Stream!</title>
+      <description>If you enjoy P-Stream, please consider donating to help maintain it!
+
+We're looking at a new server, but we need your help! If a couple people could chip in and cover the $20 (per month) that would be much appreciated. There is only one ad on the site, and we want to keep it that way!
+
+It will improve uptime for FED API and faster EU streams, another proxy which we desperately need.
+
+If you are interested in donating, please check the link below!
+      </description>
+      <link>https://rentry.co/h5mypdfs</link>
+      <pubDate>Sat, 06 Sep 2025 14:42:00 MST</pubDate>
+      <category>announcement</category>
+    </item>
+
+    <item>
+      <guid>notification-038</guid>
+      <title>New subtitle source badges!</title>
+      <description>There's now a quick way to see the source of a subtitle on the external subtitle selection menu!
+
+In addition to the new badges, there's now a new subtitle source: Febbox! Thanks to Nemo for helping P-Stream fetch subtitles from Febbox without needing to set up the Febbox token! It also allows for the subtitles to be used on any source!
+      </description>
+      <pubDate>Tue, 26 Aug 2025 21:50:00 MST</pubDate>
+      <category>feature</category>
+    </item>
+
+    <item>
+      <guid>notification-037</guid>
+      <title>P-Stream v5.1.1 released!</title>
+      <description>Minor updates to fix bugs and add some QoL features.
+
+- Now anyone can watch trailers on the details modal! A custom proxy or the extension no longer required. (Other IMDb info still requires the extension or proxy)
+- Added a resume watching page.
+- Added checks and label to see what embed a source is currently on. (e.x. fox for xprime)
+- Updated curated movie lists and editor picks!
+- Added an onboarding reminder for content that is not found but there are other sources that may have it.
+- Using a custom subtitle source with no baked in ads.
+- Fixed a broken URL issue caused by the Dood source.
+- Fixed 2x boost overlay sizing.
+- Fixed speed boost not working on mobile.
+- Other bug fixes!
+
+P.S. I wanted to highlight TrinityHades, a community member, who is working on adding Safari support to the P-Stream extension! It's not quire ready yet but soon mac users will be able to use the extension to watch P-Stream on Safari!
+      </description>
+      <pubDate>Sun, 24 Aug 2025 22:37:00 MST</pubDate>
+      <category>update</category>
+    </item>
+
+    <item>
       <guid>notification-036</guid>
       <title>Some sources are currently down</title>
       <description>Some sources are currently down. We are aware of the issue and are working to resolve it. 
