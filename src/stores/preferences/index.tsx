@@ -14,14 +14,19 @@ export interface PreferencesStore {
   forceCompactEpisodeView: boolean;
   sourceOrder: string[];
   enableSourceOrder: boolean;
+  disabledSources: string[];
   embedOrder: string[];
   enableEmbedOrder: boolean;
+  disabledEmbeds: string[];
   proxyTmdb: boolean;
   febboxKey: string | null;
   realDebridKey: string | null;
   enableLowPerformanceMode: boolean;
   enableNativeSubtitles: boolean;
   enableHoldToBoost: boolean;
+  homeSectionOrder: string[];
+  manualSourceSelection: boolean;
+  enableDoubleClickToSeek: boolean;
 
   setEnableThumbnails(v: boolean): void;
   setEnableAutoplay(v: boolean): void;
@@ -34,14 +39,19 @@ export interface PreferencesStore {
   setForceCompactEpisodeView(v: boolean): void;
   setSourceOrder(v: string[]): void;
   setEnableSourceOrder(v: boolean): void;
+  setDisabledSources(v: string[]): void;
   setEmbedOrder(v: string[]): void;
   setEnableEmbedOrder(v: boolean): void;
+  setDisabledEmbeds(v: string[]): void;
   setProxyTmdb(v: boolean): void;
   setFebboxKey(v: string | null): void;
   setRealDebridKey(v: string | null): void;
   setEnableLowPerformanceMode(v: boolean): void;
   setEnableNativeSubtitles(v: boolean): void;
   setEnableHoldToBoost(v: boolean): void;
+  setHomeSectionOrder(v: string[]): void;
+  setManualSourceSelection(v: boolean): void;
+  setEnableDoubleClickToSeek(v: boolean): void;
 }
 
 export const usePreferencesStore = create(
@@ -58,14 +68,19 @@ export const usePreferencesStore = create(
       forceCompactEpisodeView: false,
       sourceOrder: [],
       enableSourceOrder: false,
+      disabledSources: [],
       embedOrder: [],
       enableEmbedOrder: false,
+      disabledEmbeds: [],
       proxyTmdb: false,
       febboxKey: null,
       realDebridKey: null,
       enableLowPerformanceMode: false,
       enableNativeSubtitles: false,
       enableHoldToBoost: true,
+      homeSectionOrder: ["watching", "bookmarks"],
+      manualSourceSelection: false,
+      enableDoubleClickToSeek: false,
       setEnableThumbnails(v) {
         set((s) => {
           s.enableThumbnails = v;
@@ -121,6 +136,11 @@ export const usePreferencesStore = create(
           s.enableSourceOrder = v;
         });
       },
+      setDisabledSources(v) {
+        set((s) => {
+          s.disabledSources = v;
+        });
+      },
       setEmbedOrder(v) {
         set((s) => {
           s.embedOrder = v;
@@ -129,6 +149,11 @@ export const usePreferencesStore = create(
       setEnableEmbedOrder(v) {
         set((s) => {
           s.enableEmbedOrder = v;
+        });
+      },
+      setDisabledEmbeds(v) {
+        set((s) => {
+          s.disabledEmbeds = v;
         });
       },
       setProxyTmdb(v) {
@@ -159,6 +184,21 @@ export const usePreferencesStore = create(
       setEnableHoldToBoost(v) {
         set((s) => {
           s.enableHoldToBoost = v;
+        });
+      },
+      setHomeSectionOrder(v) {
+        set((s) => {
+          s.homeSectionOrder = v.length > 0 ? v : ["watching", "bookmarks"];
+        });
+      },
+      setManualSourceSelection(v) {
+        set((s) => {
+          s.manualSourceSelection = v;
+        });
+      },
+      setEnableDoubleClickToSeek(v) {
+        set((s) => {
+          s.enableDoubleClickToSeek = v;
         });
       },
     })),

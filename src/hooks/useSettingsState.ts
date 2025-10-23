@@ -59,13 +59,21 @@ export function useSettingsState(
   enableDetailsModal: boolean,
   sourceOrder: string[],
   enableSourceOrder: boolean,
+  disabledSources: string[],
+  embedOrder: string[],
+  enableEmbedOrder: boolean,
+  disabledEmbeds: string[],
   proxyTmdb: boolean,
   enableSkipCredits: boolean,
   enableImageLogos: boolean,
   enableCarouselView: boolean,
   forceCompactEpisodeView: boolean,
   enableLowPerformanceMode: boolean,
+  enableNativeSubtitles: boolean,
   enableHoldToBoost: boolean,
+  homeSectionOrder: string[],
+  manualSourceSelection: boolean,
+  enableDoubleClickToSeek: boolean,
 ) {
   const [proxyUrlsState, setProxyUrls, resetProxyUrls, proxyUrlsChanged] =
     useDerived(proxyUrls);
@@ -155,6 +163,30 @@ export function useSettingsState(
     resetEnableSourceOrder,
     enableSourceOrderChanged,
   ] = useDerived(enableSourceOrder);
+  const [
+    disabledSourcesState,
+    setDisabledSourcesState,
+    resetDisabledSources,
+    disabledSourcesChanged,
+  ] = useDerived(disabledSources);
+  const [
+    embedOrderState,
+    setEmbedOrderState,
+    resetEmbedOrder,
+    embedOrderChanged,
+  ] = useDerived(embedOrder);
+  const [
+    enableEmbedOrderState,
+    setEnableEmbedOrderState,
+    resetEnableEmbedOrder,
+    enableEmbedOrderChanged,
+  ] = useDerived(enableEmbedOrder);
+  const [
+    disabledEmbedsState,
+    setDisabledEmbedsState,
+    resetDisabledEmbeds,
+    disabledEmbedsChanged,
+  ] = useDerived(disabledEmbeds);
   const [proxyTmdbState, setProxyTmdbState, resetProxyTmdb, proxyTmdbChanged] =
     useDerived(proxyTmdb);
   const [
@@ -176,11 +208,35 @@ export function useSettingsState(
     enableLowPerformanceModeChanged,
   ] = useDerived(enableLowPerformanceMode);
   const [
+    enableNativeSubtitlesState,
+    setEnableNativeSubtitlesState,
+    resetEnableNativeSubtitles,
+    enableNativeSubtitlesChanged,
+  ] = useDerived(enableNativeSubtitles);
+  const [
     enableHoldToBoostState,
     setEnableHoldToBoostState,
     resetEnableHoldToBoost,
     enableHoldToBoostChanged,
   ] = useDerived(enableHoldToBoost);
+  const [
+    homeSectionOrderState,
+    setHomeSectionOrderState,
+    resetHomeSectionOrder,
+    homeSectionOrderChanged,
+  ] = useDerived(homeSectionOrder);
+  const [
+    manualSourceSelectionState,
+    setManualSourceSelectionState,
+    resetManualSourceSelection,
+    manualSourceSelectionChanged,
+  ] = useDerived(manualSourceSelection);
+  const [
+    enableDoubleClickToSeekState,
+    setEnableDoubleClickToSeekState,
+    resetEnableDoubleClickToSeek,
+    enableDoubleClickToSeekChanged,
+  ] = useDerived(enableDoubleClickToSeek);
 
   function reset() {
     resetTheme();
@@ -202,11 +258,19 @@ export function useSettingsState(
     resetEnableImageLogos();
     resetSourceOrder();
     resetEnableSourceOrder();
+    resetDisabledSources();
+    resetEmbedOrder();
+    resetEnableEmbedOrder();
+    resetDisabledEmbeds();
     resetProxyTmdb();
     resetEnableCarouselView();
     resetForceCompactEpisodeView();
     resetEnableLowPerformanceMode();
+    resetEnableNativeSubtitles();
     resetEnableHoldToBoost();
+    resetHomeSectionOrder();
+    resetManualSourceSelection();
+    resetEnableDoubleClickToSeek();
   }
 
   const changed =
@@ -228,11 +292,19 @@ export function useSettingsState(
     enableImageLogosChanged ||
     sourceOrderChanged ||
     enableSourceOrderChanged ||
+    disabledSourcesChanged ||
+    embedOrderChanged ||
+    enableEmbedOrderChanged ||
+    disabledEmbedsChanged ||
     proxyTmdbChanged ||
     enableCarouselViewChanged ||
     forceCompactEpisodeViewChanged ||
     enableLowPerformanceModeChanged ||
-    enableHoldToBoostChanged;
+    enableNativeSubtitlesChanged ||
+    enableHoldToBoostChanged ||
+    homeSectionOrderChanged ||
+    manualSourceSelectionChanged ||
+    enableDoubleClickToSeekChanged;
 
   return {
     reset,
@@ -332,6 +404,26 @@ export function useSettingsState(
       set: setProxyTmdbState,
       changed: proxyTmdbChanged,
     },
+    disabledSources: {
+      state: disabledSourcesState,
+      set: setDisabledSourcesState,
+      changed: disabledSourcesChanged,
+    },
+    embedOrder: {
+      state: embedOrderState,
+      set: setEmbedOrderState,
+      changed: embedOrderChanged,
+    },
+    enableEmbedOrder: {
+      state: enableEmbedOrderState,
+      set: setEnableEmbedOrderState,
+      changed: enableEmbedOrderChanged,
+    },
+    disabledEmbeds: {
+      state: disabledEmbedsState,
+      set: setDisabledEmbedsState,
+      changed: disabledEmbedsChanged,
+    },
     enableCarouselView: {
       state: enableCarouselViewState,
       set: setEnableCarouselViewState,
@@ -347,10 +439,30 @@ export function useSettingsState(
       set: setEnableLowPerformanceModeState,
       changed: enableLowPerformanceModeChanged,
     },
+    enableNativeSubtitles: {
+      state: enableNativeSubtitlesState,
+      set: setEnableNativeSubtitlesState,
+      changed: enableNativeSubtitlesChanged,
+    },
     enableHoldToBoost: {
       state: enableHoldToBoostState,
       set: setEnableHoldToBoostState,
       changed: enableHoldToBoostChanged,
+    },
+    homeSectionOrder: {
+      state: homeSectionOrderState,
+      set: setHomeSectionOrderState,
+      changed: homeSectionOrderChanged,
+    },
+    manualSourceSelection: {
+      state: manualSourceSelectionState,
+      set: setManualSourceSelectionState,
+      changed: manualSourceSelectionChanged,
+    },
+    enableDoubleClickToSeek: {
+      state: enableDoubleClickToSeekState,
+      set: setEnableDoubleClickToSeekState,
+      changed: enableDoubleClickToSeekChanged,
     },
   };
 }

@@ -23,44 +23,22 @@ import { MediaItem } from "@/utils/mediaTypes";
 import { CarouselNavButtons } from "./CarouselNavButtons";
 
 interface ContentConfig {
-  /** Primary content type to fetch */
   type: DiscoverContentType;
-  /** Fallback content type if primary fails */
   fallback?: DiscoverContentType;
 }
 
 interface MediaCarouselProps {
-  /** Content configuration for the carousel */
   content: ContentConfig;
-  /** Whether this is a TV show carousel */
   isTVShow: boolean;
-  /** Refs for carousel navigation */
   carouselRefs: React.MutableRefObject<{
     [key: string]: HTMLDivElement | null;
   }>;
-  /** Callback when media details should be shown */
   onShowDetails?: (media: MediaItem) => void;
-  /** Whether to show more content button/link */
   moreContent?: boolean;
-  /** Custom more content link */
   moreLink?: string;
-  /** Whether to show provider selection */
   showProviders?: boolean;
-  /** Whether to show genre selection */
   showGenres?: boolean;
-  /** Whether to show recommendations */
   showRecommendations?: boolean;
-}
-
-function MediaCardSkeleton() {
-  return (
-    <div className="relative mt-4 group cursor-default user-select-none rounded-xl p-2 bg-transparent transition-colors duration-300 w-[10rem] md:w-[11.5rem] h-auto">
-      <div className="animate-pulse">
-        <div className="w-full aspect-[2/3] bg-mediaCard-hoverBackground rounded-lg" />
-        <div className="mt-2 h-4 bg-mediaCard-hoverBackground rounded w-3/4" />
-      </div>
-    </div>
-  );
 }
 
 function MoreCard({ link }: { link: string }) {
@@ -346,10 +324,21 @@ export function MediaCarousel({
             <div className="md:w-12" />
             {Array(10)
               .fill(null)
-              .map(() => (
-                <MediaCardSkeleton
+              .map((_, index) => (
+                <div
                   key={`skeleton-loading-${Math.random().toString(36).substring(2)}`}
-                />
+                  className="relative mt-4 group cursor-default user-select-none rounded-xl p-2 bg-transparent transition-colors duration-300 w-[10rem] md:w-[11.5rem] h-auto"
+                >
+                  <MediaCard
+                    media={{
+                      id: `skeleton-${index}`,
+                      title: "",
+                      poster: "",
+                      type: isTVShow ? "show" : "movie",
+                    }}
+                    forceSkeleton
+                  />
+                </div>
               ))}
             <div className="md:w-12" />
           </div>
@@ -568,10 +557,21 @@ export function MediaCarousel({
               ))
             : Array(10)
                 .fill(null)
-                .map((_, _i) => (
-                  <MediaCardSkeleton
+                .map((_, index) => (
+                  <div
                     key={`skeleton-${categorySlug}-${Math.random().toString(36).substring(2)}`}
-                  />
+                    className="relative mt-4 group cursor-default user-select-none rounded-xl p-2 bg-transparent transition-colors duration-300 w-[10rem] md:w-[11.5rem] h-auto"
+                  >
+                    <MediaCard
+                      media={{
+                        id: `skeleton-${index}`,
+                        title: "",
+                        poster: "",
+                        type: isTVShow ? "show" : "movie",
+                      }}
+                      forceSkeleton
+                    />
+                  </div>
                 ))}
 
           {moreContent && generatedMoreLink && (

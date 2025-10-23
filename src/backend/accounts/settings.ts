@@ -19,14 +19,19 @@ export interface SettingsInput {
   enableImageLogos?: boolean;
   enableCarouselView?: boolean;
   forceCompactEpisodeView?: boolean;
-  sourceOrder?: string[];
+  sourceOrder?: string[] | null;
   enableSourceOrder?: boolean;
-  embedOrder?: string[];
+  disabledSources?: string[] | null;
+  embedOrder?: string[] | null;
   enableEmbedOrder?: boolean;
+  disabledEmbeds?: string[] | null;
   proxyTmdb?: boolean;
   enableLowPerformanceMode?: boolean;
   enableNativeSubtitles?: boolean;
   enableHoldToBoost?: boolean;
+  homeSectionOrder?: string[] | null;
+  manualSourceSelection?: boolean;
+  enableDoubleClickToSeek?: boolean;
 }
 
 export interface SettingsResponse {
@@ -44,14 +49,20 @@ export interface SettingsResponse {
   enableDetailsModal?: boolean;
   enableImageLogos?: boolean;
   enableCarouselView?: boolean;
-  sourceOrder?: string[];
+  forceCompactEpisodeView?: boolean;
+  sourceOrder?: string[] | null;
   enableSourceOrder?: boolean;
-  embedOrder?: string[];
+  disabledSources?: string[] | null;
+  embedOrder?: string[] | null;
   enableEmbedOrder?: boolean;
+  disabledEmbeds?: string[] | null;
   proxyTmdb?: boolean;
   enableLowPerformanceMode?: boolean;
   enableNativeSubtitles?: boolean;
   enableHoldToBoost?: boolean;
+  homeSectionOrder?: string[] | null;
+  manualSourceSelection?: boolean;
+  enableDoubleClickToSeek?: boolean;
 }
 
 export function updateSettings(

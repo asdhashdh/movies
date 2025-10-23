@@ -8,7 +8,7 @@ import { Button } from "@/components/buttons/Button";
 import { Toggle } from "@/components/buttons/Toggle";
 import { FlagIcon } from "@/components/FlagIcon";
 import { Dropdown } from "@/components/form/Dropdown";
-import { SortableList } from "@/components/form/SortableList";
+import { SortableListWithToggles } from "@/components/form/SortableListWithToggles";
 import { Heading1 } from "@/components/utils/Text";
 import { appLanguageOptions } from "@/setup/i18n";
 import { isAutoplayAllowed } from "@/utils/autoplay";
@@ -27,10 +27,16 @@ export function PreferencesPart(props: {
   setSourceOrder: (v: string[]) => void;
   enableSourceOrder: boolean;
   setenableSourceOrder: (v: boolean) => void;
+  disabledSources: string[];
+  setDisabledSources: (v: string[]) => void;
   enableLowPerformanceMode: boolean;
   setEnableLowPerformanceMode: (v: boolean) => void;
   enableHoldToBoost: boolean;
   setEnableHoldToBoost: (v: boolean) => void;
+  manualSourceSelection: boolean;
+  setManualSourceSelection: (v: boolean) => void;
+  enableDoubleClickToSeek: boolean;
+  setEnableDoubleClickToSeek: (v: boolean) => void;
 }) {
   const { t } = useTranslation();
   const sorted = sortLangCodes(appLanguageOptions.map((item) => item.code));
@@ -57,8 +63,9 @@ export function PreferencesPart(props: {
       id,
       name: allSources.find((s) => s.id === id)?.name || id,
       disabled: !currentDeviceSources.find((s) => s.id === id),
+      enabled: !props.disabledSources.includes(id),
     }));
-  }, [props.sourceOrder, allSources]);
+  }, [props.sourceOrder, props.disabledSources, allSources]);
 
   const navigate = useNavigate();
 
@@ -71,6 +78,13 @@ export function PreferencesPart(props: {
       props.setEnableThumbnails(false);
       props.setEnableAutoplay(false);
     }
+  };
+
+  const handleSourceToggle = (sourceId: string) => {
+    const newDisabledSources = props.disabledSources.includes(sourceId)
+      ? props.disabledSources.filter((id) => id !== sourceId)
+      : [...props.disabledSources, sourceId];
+    props.setDisabledSources(newDisabledSources);
   };
 
   return (
@@ -214,11 +228,52 @@ export function PreferencesPart(props: {
               </p>
             </div>
           </div>
+
+          {/* Double Click to Seek Preference */}
+          <div>
+            <p className="text-white font-bold mb-3">
+              {t("settings.preferences.doubleClickToSeek")}
+            </p>
+            <p className="max-w-[25rem] font-medium">
+              {t("settings.preferences.doubleClickToSeekDescription")}
+            </p>
+            <div
+              onClick={() =>
+                props.setEnableDoubleClickToSeek(!props.enableDoubleClickToSeek)
+              }
+              className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
+            >
+              <Toggle enabled={props.enableDoubleClickToSeek} />
+              <p className="flex-1 text-white font-bold">
+                {t("settings.preferences.doubleClickToSeekLabel")}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Column */}
         <div id="source-order" className="space-y-8">
           <div className="flex flex-col gap-3">
+            {/* Manual Source Selection */}
+            <div>
+              <p className="text-white font-bold mb-3">
+                {t("settings.preferences.manualSource")}
+              </p>
+              <p className="max-w-[25rem] font-medium">
+                {t("settings.preferences.manualSourceDescription")}
+              </p>
+              <div
+                onClick={() =>
+                  props.setManualSourceSelection(!props.manualSourceSelection)
+                }
+                className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
+              >
+                <Toggle enabled={props.manualSourceSelection} />
+                <p className="flex-1 text-white font-bold">
+                  {t("settings.preferences.manualSourceLabel")}
+                </p>
+              </div>
+            </div>
             <p className="text-white font-bold">
               {t("settings.preferences.sourceOrder")}
             </p>
@@ -249,11 +304,12 @@ export function PreferencesPart(props: {
 
             {props.enableSourceOrder && (
               <div className="w-full flex flex-col gap-4">
-                <SortableList
+                <SortableListWithToggles
                   items={sourceItems}
                   setItems={(items) =>
                     props.setSourceOrder(items.map((item) => item.id))
                   }
+                  onToggle={handleSourceToggle}
                 />
                 <Button
                   className="max-w-[25rem]"

@@ -32,6 +32,7 @@ export function useAuthData() {
     (s) => s.importSubtitleLanguage,
   );
   const setFebboxKey = usePreferencesStore((s) => s.setFebboxKey);
+  const setRealDebridKey = usePreferencesStore((s) => s.setRealDebridKey);
 
   const replaceBookmarks = useBookmarkStore((s) => s.replaceBookmarks);
   const replaceItems = useProgressStore((s) => s.replaceItems);
@@ -50,10 +51,18 @@ export function useAuthData() {
   const setEnableCarouselView = usePreferencesStore(
     (s) => s.setEnableCarouselView,
   );
+  const setForceCompactEpisodeView = usePreferencesStore(
+    (s) => s.setForceCompactEpisodeView,
+  );
   const setSourceOrder = usePreferencesStore((s) => s.setSourceOrder);
   const setEnableSourceOrder = usePreferencesStore(
     (s) => s.setEnableSourceOrder,
   );
+  const setDisabledSources = usePreferencesStore((s) => s.setDisabledSources);
+  const setEmbedOrder = usePreferencesStore((s) => s.setEmbedOrder);
+  const setEnableEmbedOrder = usePreferencesStore((s) => s.setEnableEmbedOrder);
+  const setDisabledEmbeds = usePreferencesStore((s) => s.setDisabledEmbeds);
+
   const setProxyTmdb = usePreferencesStore((s) => s.setProxyTmdb);
 
   const setEnableLowPerformanceMode = usePreferencesStore(
@@ -64,6 +73,13 @@ export function useAuthData() {
   );
   const setEnableHoldToBoost = usePreferencesStore(
     (s) => s.setEnableHoldToBoost,
+  );
+  const setHomeSectionOrder = usePreferencesStore((s) => s.setHomeSectionOrder);
+  const setEnableDoubleClickToSeek = usePreferencesStore(
+    (s) => s.setEnableDoubleClickToSeek,
+  );
+  const setManualSourceSelection = usePreferencesStore(
+    (s) => s.setManualSourceSelection,
   );
 
   const login = useCallback(
@@ -165,12 +181,32 @@ export function useAuthData() {
         setEnableCarouselView(settings.enableCarouselView);
       }
 
+      if (settings.forceCompactEpisodeView !== undefined) {
+        setForceCompactEpisodeView(settings.forceCompactEpisodeView);
+      }
+
       if (settings.sourceOrder !== undefined) {
-        setSourceOrder(settings.sourceOrder);
+        setSourceOrder(settings.sourceOrder ?? []);
       }
 
       if (settings.enableSourceOrder !== undefined) {
         setEnableSourceOrder(settings.enableSourceOrder);
+      }
+
+      if (settings.disabledSources !== undefined) {
+        setDisabledSources(settings.disabledSources ?? []);
+      }
+
+      if (settings.embedOrder !== undefined) {
+        setEmbedOrder(settings.embedOrder ?? []);
+      }
+
+      if (settings.enableEmbedOrder !== undefined) {
+        setEnableEmbedOrder(settings.enableEmbedOrder);
+      }
+
+      if (settings.disabledEmbeds !== undefined) {
+        setDisabledEmbeds(settings.disabledEmbeds ?? []);
       }
 
       if (settings.proxyTmdb !== undefined) {
@@ -179,6 +215,10 @@ export function useAuthData() {
 
       if (settings.febboxKey !== undefined) {
         setFebboxKey(settings.febboxKey);
+      }
+
+      if (settings.realDebridKey !== undefined) {
+        setRealDebridKey(settings.realDebridKey);
       }
 
       if (settings.enableLowPerformanceMode !== undefined) {
@@ -191,6 +231,20 @@ export function useAuthData() {
 
       if (settings.enableHoldToBoost !== undefined) {
         setEnableHoldToBoost(settings.enableHoldToBoost);
+      }
+
+      if (settings.homeSectionOrder !== undefined) {
+        setHomeSectionOrder(
+          settings.homeSectionOrder ?? ["watching", "bookmarks"],
+        );
+      }
+
+      if (settings.manualSourceSelection !== undefined) {
+        setManualSourceSelection(settings.manualSourceSelection);
+      }
+
+      if (settings.enableDoubleClickToSeek !== undefined) {
+        setEnableDoubleClickToSeek(settings.enableDoubleClickToSeek);
       }
     },
     [
@@ -208,13 +262,22 @@ export function useAuthData() {
       setEnableDetailsModal,
       setEnableImageLogos,
       setEnableCarouselView,
+      setForceCompactEpisodeView,
       setSourceOrder,
       setEnableSourceOrder,
+      setDisabledSources,
+      setEmbedOrder,
+      setEnableEmbedOrder,
+      setDisabledEmbeds,
       setProxyTmdb,
       setFebboxKey,
+      setRealDebridKey,
       setEnableLowPerformanceMode,
       setEnableNativeSubtitles,
       setEnableHoldToBoost,
+      setHomeSectionOrder,
+      setManualSourceSelection,
+      setEnableDoubleClickToSeek,
     ],
   );
 

@@ -50,12 +50,22 @@ export function VerifyPassphrase(props: VerifyPassphraseProps) {
     enableDetailsModal: store.enableDetailsModal,
     enableImageLogos: store.enableImageLogos,
     enableCarouselView: store.enableCarouselView,
+    forceCompactEpisodeView: store.forceCompactEpisodeView,
     sourceOrder: store.sourceOrder,
     enableSourceOrder: store.enableSourceOrder,
+    disabledSources: store.disabledSources,
+    embedOrder: store.embedOrder,
+    enableEmbedOrder: store.enableEmbedOrder,
+    disabledEmbeds: store.disabledEmbeds,
     proxyTmdb: store.proxyTmdb,
     febboxKey: store.febboxKey,
+    realDebridKey: store.realDebridKey,
     enableLowPerformanceMode: store.enableLowPerformanceMode,
     enableNativeSubtitles: store.enableNativeSubtitles,
+    enableHoldToBoost: store.enableHoldToBoost,
+    homeSectionOrder: store.homeSectionOrder,
+    enableDoubleClickToSeek: store.enableDoubleClickToSeek,
+    manualSourceSelection: store.manualSourceSelection,
   }));
 
   const backendUrl = useBackendUrl();

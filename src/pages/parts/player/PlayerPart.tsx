@@ -1,6 +1,5 @@
 import { ReactNode, useRef, useState } from "react";
 
-import IosPwaLimitations from "@/components/buttons/IosPwaLimitations";
 import { BrandPill } from "@/components/layout/BrandPill";
 import { Player } from "@/components/player";
 import { SkipIntroButton } from "@/components/player/atoms/SkipIntroButton";
@@ -12,6 +11,7 @@ import { useSkipTime } from "@/components/player/hooks/useSkipTime";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { PlayerMeta, playerStatus } from "@/stores/player/slices/source";
 import { usePlayerStore } from "@/stores/player/store";
+import { usePreferencesStore } from "@/stores/preferences";
 import { useWatchPartyStore } from "@/stores/watchParty";
 
 import { ScrapingPartInterruptButton, Tips } from "./ScrapingPart";
@@ -27,14 +27,16 @@ export function PlayerPart(props: PlayerPartProps) {
   const { showTargets, showTouchTargets } = useShouldShowControls();
   const status = usePlayerStore((s) => s.status);
   const { isMobile } = useIsMobile();
+  const manualSourceSelection = usePreferencesStore(
+    (s) => s.manualSourceSelection,
+  );
   const isLoading = usePlayerStore((s) => s.mediaPlaying.isLoading);
   const { isHost, enabled } = useWatchPartyStore();
 
   const inControl = !enabled || isHost;
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isIOSPWA =
-    isIOS && window.matchMedia("(display-mode: standalone)").matches;
+  const isPWA = window.matchMedia("(display-mode: standalone)").matches;
 
   const [isShifting, setIsShifting] = useState(false);
   const [isHoldingFullscreen, setIsHoldingFullscreen] = useState(false);
@@ -83,15 +85,11 @@ export function PlayerPart(props: PlayerPartProps) {
       <Player.SubtitleView controlsShown={showTargets} />
 
       {status === playerStatus.PLAYING ? (
-        <>
-          <Player.CenterControls>
-            <Player.LoadingSpinner />
-            <Player.AutoPlayStart />
-          </Player.CenterControls>
-          <Player.CenterControls>
-            <Player.CastingNotification />
-          </Player.CenterControls>
-        </>
+        <Player.CenterControls>
+          <Player.LoadingSpinner />
+          <Player.AutoPlayStart />
+          <Player.CastingNotification />
+        </Player.CenterControls>
       ) : null}
 
       <Player.CenterMobileControls
@@ -143,7 +141,7 @@ export function PlayerPart(props: PlayerPartProps) {
       </Player.TopControls>
 
       <Player.BottomControls show={showTargets}>
-        {status === playerStatus.PLAYING ? null : <Tips />}
+        {status !== playerStatus.PLAYING && !manualSourceSelection && <Tips />}
         <div className="flex items-center justify-center space-x-3 h-full">
           {status === playerStatus.SCRAPING ? (
             <ScrapingPartInterruptButton />
@@ -169,6 +167,10 @@ export function PlayerPart(props: PlayerPartProps) {
           </Player.LeftSideControls>
           <div className="flex items-center space-x-3">
             <Player.Episodes inControl={inControl} />
+            <Player.SkipEpisodeButton
+              inControl={inControl}
+              onChange={props.onMetaChange}
+            />
             {status === playerStatus.PLAYING ? (
               <>
                 <Player.Pip />
@@ -196,7 +198,9 @@ export function PlayerPart(props: PlayerPartProps) {
           <div />
           <div className="flex justify-center space-x-3">
             {/* Disable PiP for iOS PWA */}
-            {!isIOSPWA && status === playerStatus.PLAYING && <Player.Pip />}
+            {!isPWA && !isIOS && status === playerStatus.PLAYING && (
+              <Player.Pip />
+            )}
             <Player.Episodes inControl={inControl} />
             {status === playerStatus.PLAYING ? (
               <div className="hidden ssm:block">
@@ -204,11 +208,9 @@ export function PlayerPart(props: PlayerPartProps) {
               </div>
             ) : null}
             <Player.Settings />
-            {isIOSPWA && <IosPwaLimitations />}
           </div>
           <div>
-            {/* iOS PWA */}
-            {!isIOSPWA && (
+            {status === playerStatus.PLAYING && (
               <div
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
@@ -218,7 +220,6 @@ export function PlayerPart(props: PlayerPartProps) {
                 {isHoldingFullscreen ? <Widescreen /> : <Player.Fullscreen />}
               </div>
             )}
-            {isIOSPWA && status === playerStatus.PLAYING && <Widescreen />}
           </div>
         </div>
       </Player.BottomControls>

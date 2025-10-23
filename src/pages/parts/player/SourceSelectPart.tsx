@@ -1,4 +1,5 @@
-import { ReactNode, useEffect, useMemo, useRef } from "react";
+import { ScrapeMedia } from "@p-stream/providers";
+import React, { ReactNode, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { getCachedMetadata } from "@/backend/helpers/providerApi";
@@ -9,28 +10,16 @@ import {
 } from "@/components/player/hooks/useSourceSelection";
 import { Menu } from "@/components/player/internals/ContextMenu";
 import { SelectableLink } from "@/components/player/internals/ContextMenu/Links";
-import { useOverlayRouter } from "@/hooks/useOverlayRouter";
-import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
 
-export interface SourceSelectionViewProps {
-  id: string;
-  onChoose?: (id: string) => void;
-}
-
-export interface EmbedSelectionViewProps {
-  id: string;
-  sourceId: string | null;
-}
-
-export function EmbedOption(props: {
+// Embed option component
+function EmbedOption(props: {
   embedId: string;
   url: string;
   sourceId: string;
   routerId: string;
 }) {
   const { t } = useTranslation();
-  const currentEmbedId = usePlayerStore((s) => s.embedId);
   const unknownEmbedName = t("player.menus.sources.unknownOption");
 
   const embedName = useMemo(() => {
@@ -47,12 +36,7 @@ export function EmbedOption(props: {
   );
 
   return (
-    <SelectableLink
-      loading={loading}
-      error={errored}
-      onClick={run}
-      selected={props.embedId === currentEmbedId}
-    >
+    <SelectableLink loading={loading} error={errored} onClick={run}>
       <span className="flex flex-col">
         <span>{embedName}</span>
       </span>
@@ -60,25 +44,31 @@ export function EmbedOption(props: {
   );
 }
 
-export function EmbedSelectionView({ sourceId, id }: EmbedSelectionViewProps) {
+// Embed selection view (when a source is selected)
+function EmbedSelectionView(props: {
+  sourceId: string;
+  routerId: string;
+  onBack: () => void;
+}) {
   const { t } = useTranslation();
-  const router = useOverlayRouter(id);
-  const { run, watching, notfound, loading, items, errored } =
-    useSourceScraping(sourceId, id);
+  const { run, notfound, loading, items, errored } = useSourceScraping(
+    props.sourceId,
+    props.routerId,
+  );
 
   const sourceName = useMemo(() => {
-    if (!sourceId) return "...";
-    const sourceMeta = getCachedMetadata().find((s) => s.id === sourceId);
+    if (!props.sourceId) return "...";
+    const sourceMeta = getCachedMetadata().find((s) => s.id === props.sourceId);
     return sourceMeta?.name ?? "...";
-  }, [sourceId]);
+  }, [props.sourceId]);
 
   const lastSourceId = useRef<string | null>(null);
   useEffect(() => {
-    if (lastSourceId.current === sourceId) return;
-    lastSourceId.current = sourceId;
-    if (!sourceId) return;
+    if (lastSourceId.current === props.sourceId) return;
+    lastSourceId.current = props.sourceId;
+    if (!props.sourceId) return;
     run();
-  }, [run, sourceId]);
+  }, [run, props.sourceId]);
 
   let content: ReactNode = null;
   if (loading)
@@ -111,47 +101,41 @@ export function EmbedSelectionView({ sourceId, id }: EmbedSelectionViewProps) {
         {t("player.menus.sources.failed.text")}
       </Menu.TextDisplay>
     );
-  else if (watching)
-    content = null; // when it starts watching, empty the display
-  else if (items && sourceId)
+  else if (items && props.sourceId)
     content = items.map((v) => (
       <EmbedOption
         key={`${v.embedId}-${v.url}`}
         embedId={v.embedId}
         url={v.url}
-        routerId={id}
-        sourceId={sourceId}
+        routerId={props.routerId}
+        sourceId={props.sourceId}
       />
     ));
 
   return (
     <>
-      <Menu.BackLink onClick={() => router.navigate("/source")}>
-        {sourceName}
-      </Menu.BackLink>
+      <Menu.BackLink onClick={props.onBack}>{sourceName}</Menu.BackLink>
       <Menu.Section>{content}</Menu.Section>
     </>
   );
 }
 
-export function SourceSelectionView({
-  id,
-  onChoose,
-}: SourceSelectionViewProps) {
+// Main source selection view
+export function SourceSelectPart(props: { media: ScrapeMedia }) {
   const { t } = useTranslation();
-  const router = useOverlayRouter(id);
-  const metaType = usePlayerStore((s) => s.meta?.type);
-  const currentSourceId = usePlayerStore((s) => s.sourceId);
+  const [selectedSourceId, setSelectedSourceId] = React.useState<string | null>(
+    null,
+  );
+  const routerId = "manualSourceSelect";
   const preferredSourceOrder = usePreferencesStore((s) => s.sourceOrder);
   const enableSourceOrder = usePreferencesStore((s) => s.enableSourceOrder);
-  const disabledSources = usePreferencesStore((s) => s.disabledSources);
 
   const sources = useMemo(() => {
+    const metaType = props.media.type;
     if (!metaType) return [];
     const allSources = getCachedMetadata()
       .filter((v) => v.type === "source")
-      .filter((v) => v.mediaTypes?.includes(metaType))
-      .filter((v) => !disabledSources.includes(v.id));
+      .filter((v) => v.mediaTypes?.includes(metaType));
 
     if (!enableSourceOrder || preferredSourceOrder.length === 0) {
       return allSources;
@@ -174,38 +158,41 @@ export function SourceSelectionView({
     orderedSources.push(...remainingSources);
 
     return orderedSources;
-  }, [metaType, preferredSourceOrder, enableSourceOrder, disabledSources]);
+  }, [props.media.type, preferredSourceOrder, enableSourceOrder]);
+
+  if (selectedSourceId) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="w-full max-w-md h-[50vh] flex flex-col">
+          <Menu.CardWithScrollable>
+            <EmbedSelectionView
+              sourceId={selectedSourceId}
+              routerId={routerId}
+              onBack={() => setSelectedSourceId(null)}
+            />
+          </Menu.CardWithScrollable>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <Menu.BackLink
-        onClick={() => router.navigate("/")}
-        rightSide={
-          <button
-            type="button"
-            onClick={() => window.open("/settings#source-order")}
-            className="-mr-2 -my-1 px-2 p-[0.4em] rounded tabbable hover:bg-video-context-light hover:bg-opacity-10"
-          >
-            {t("player.menus.sources.editOrder")}
-          </button>
-        }
-      >
-        {t("player.menus.sources.title")}
-      </Menu.BackLink>
-      <Menu.Section className="pb-4">
-        {sources.map((v) => (
-          <SelectableLink
-            key={v.id}
-            onClick={() => {
-              onChoose?.(v.id);
-              router.navigate("/source/embeds");
-            }}
-            selected={v.id === currentSourceId}
-          >
-            {v.name}
-          </SelectableLink>
-        ))}
-      </Menu.Section>
-    </>
+    <div className="h-full w-full flex items-center justify-center">
+      <div className="w-full max-w-md h-[50vh] flex flex-col">
+        <Menu.CardWithScrollable>
+          <Menu.Title>{t("player.menus.sources.title")}</Menu.Title>
+          <Menu.Section className="pb-4">
+            {sources.map((v) => (
+              <SelectableLink
+                key={v.id}
+                onClick={() => setSelectedSourceId(v.id)}
+              >
+                {v.name}
+              </SelectableLink>
+            ))}
+          </Menu.Section>
+        </Menu.CardWithScrollable>
+      </div>
+    </div>
   );
 }

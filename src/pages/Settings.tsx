@@ -1,7 +1,7 @@
 import classNames from "classnames";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAsyncFn } from "react-use";
+import { useAsyncFn, useWindowSize } from "react-use";
 
 import {
   base64ToBuffer,
@@ -13,6 +13,8 @@ import { getSettings, updateSettings } from "@/backend/accounts/settings";
 import { editUser } from "@/backend/accounts/user";
 import { getAllProviders } from "@/backend/providers/providers";
 import { Button } from "@/components/buttons/Button";
+import { SearchBarInput } from "@/components/form/SearchBar";
+import { ThinContainer } from "@/components/layout/ThinContainer";
 import { WideContainer } from "@/components/layout/WideContainer";
 import { UserIcons } from "@/components/UserIcon";
 import { Heading1 } from "@/components/utils/Text";
@@ -37,19 +39,70 @@ import { useSubtitleStore } from "@/stores/subtitles";
 import { usePreviewThemeStore, useThemeStore } from "@/stores/theme";
 
 import { SubPageLayout } from "./layouts/SubPageLayout";
-import { AdminPanelPart } from "./parts/settings/AdminPanel";
 import { PreferencesPart } from "./parts/settings/PreferencesPart";
 
-function SettingsLayout(props: { children: React.ReactNode }) {
+function SettingsLayout(props: {
+  children: React.ReactNode;
+  searchQuery: string;
+  onSearchChange: (value: string, force: boolean) => void;
+  onSearchUnFocus: (newSearch?: string) => void;
+}) {
+  const { t } = useTranslation();
   const { isMobile } = useIsMobile();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const { width: windowWidth, height: windowHeight } = useWindowSize();
+
+  // Dynamic offset calculation like HeroPart
+  const topSpacing = 16; // Base spacing
+  const [stickyOffset, setStickyOffset] = useState(topSpacing);
+
+  // Detect if running as a PWA on iOS
+  const isIOSPWA =
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) &&
+    window.matchMedia("(display-mode: standalone)").matches;
+
+  const adjustedTopSpacing = isIOSPWA ? 60 : topSpacing;
+  const isLandscape = windowHeight < windowWidth && isIOSPWA;
+  const adjustedOffset = isLandscape ? -40 : 0;
+
+  useEffect(() => {
+    if (windowWidth > 1280) {
+      // On large screens the bar goes inline with the nav elements
+      setStickyOffset(adjustedTopSpacing);
+    } else {
+      // On smaller screens the bar goes below the nav elements
+      setStickyOffset(adjustedTopSpacing + 60 + adjustedOffset);
+    }
+  }, [adjustedOffset, adjustedTopSpacing, windowWidth]);
 
   return (
     <WideContainer ultraWide classNames="overflow-visible">
+      {/* Floating Search Bar - starts in sticky state */}
+      <div
+        className="fixed left-0 right-0 z-50"
+        style={{
+          top: `${stickyOffset}px`,
+        }}
+      >
+        <ThinContainer>
+          <SearchBarInput
+            ref={searchRef}
+            onChange={props.onSearchChange}
+            value={props.searchQuery}
+            onUnFocus={props.onSearchUnFocus}
+            placeholder={t("settings.search.placeholder")}
+            isSticky
+            hideTooltip
+          />
+        </ThinContainer>
+      </div>
+
       <div
         className={classNames(
           "grid gap-12",
           isMobile ? "grid-cols-1" : "lg:grid-cols-[280px,1fr]",
         )}
+        data-settings-content
       >
         <SidebarPart />
         <div>{props.children}</div>
@@ -103,6 +156,8 @@ export function AccountSettings(props: {
 }
 
 export function SettingsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
@@ -118,6 +173,77 @@ export function SettingsPage() {
   const setTheme = useThemeStore((s) => s.setTheme);
   const previewTheme = usePreviewThemeStore((s) => s.previewTheme);
   const setPreviewTheme = usePreviewThemeStore((s) => s.setPreviewTheme);
+
+  // Simple text search with highlighting
+  const handleSearchChange = useCallback((value: string, _force: boolean) => {
+    setSearchQuery(value);
+
+    // Remove existing highlights
+    const existingHighlights = document.querySelectorAll(".search-highlight");
+    existingHighlights.forEach((el) => {
+      const parent = el.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(el.textContent || ""), el);
+        parent.normalize();
+      }
+    });
+
+    if (value.trim()) {
+      // Find and highlight matching text
+      const walker = document.createTreeWalker(
+        document.querySelector("[data-settings-content]") || document.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+      );
+
+      let node = walker.nextNode();
+
+      while (node) {
+        const text = node.textContent || "";
+        const lowerText = text.toLowerCase();
+        const lowerValue = value.toLowerCase();
+
+        if (lowerText.includes(lowerValue)) {
+          const regex = new RegExp(
+            `(${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+            "gi",
+          );
+          const highlightedText = text.replace(
+            regex,
+            '<span class="search-highlight bg-yellow-200 text-black px-1 rounded">$1</span>',
+          );
+
+          if (highlightedText !== text) {
+            const wrapper = document.createElement("div");
+            wrapper.innerHTML = highlightedText;
+            const parent = node.parentNode;
+            if (parent) {
+              while (wrapper.firstChild) {
+                parent.insertBefore(wrapper.firstChild, node);
+              }
+              parent.removeChild(node);
+            }
+          }
+        }
+        node = walker.nextNode();
+      }
+
+      // Scroll to first highlighted element
+      const firstHighlighted = document.querySelector(".search-highlight");
+      if (firstHighlighted) {
+        firstHighlighted.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }
+  }, []);
+
+  const handleSearchUnFocus = useCallback((newSearch?: string) => {
+    if (newSearch !== undefined) {
+      setSearchQuery(newSearch);
+    }
+  }, []);
 
   const appLanguage = useLanguageStore((s) => s.language);
   const setAppLanguage = useLanguageStore((s) => s.setLanguage);
@@ -156,6 +282,19 @@ export function SettingsPage() {
     (s) => s.setEnableSourceOrder,
   );
 
+  const disabledSources = usePreferencesStore((s) => s.disabledSources);
+  const setDisabledSources = usePreferencesStore((s) => s.setDisabledSources);
+
+  // These are commented because the EmbedOrderPart is on the admin page and not on the settings page.
+  const embedOrder = usePreferencesStore((s) => s.embedOrder);
+  // const setEmbedOrder = usePreferencesStore((s) => s.setEmbedOrder);
+
+  const enableEmbedOrder = usePreferencesStore((s) => s.enableEmbedOrder);
+  // const setEnableEmbedOrder = usePreferencesStore((s) => s.setEnableEmbedOrder);
+
+  const disabledEmbeds = usePreferencesStore((s) => s.disabledEmbeds);
+  // const setDisabledEmbeds = usePreferencesStore((s) => s.setDisabledEmbeds);
+
   const enableDiscover = usePreferencesStore((s) => s.enableDiscover);
   const setEnableDiscover = usePreferencesStore((s) => s.setEnableDiscover);
 
@@ -192,9 +331,34 @@ export function SettingsPage() {
     (s) => s.setEnableLowPerformanceMode,
   );
 
+  // These are commented because the NativeSubtitlesPart is accessable though the atoms caption style menu and not on the settings page.
+  const enableNativeSubtitles = usePreferencesStore(
+    (s) => s.enableNativeSubtitles,
+  );
+  // const setEnableNativeSubtitles = usePreferencesStore(
+  //   (s) => s.setEnableNativeSubtitles,
+  // );
+
   const enableHoldToBoost = usePreferencesStore((s) => s.enableHoldToBoost);
   const setEnableHoldToBoost = usePreferencesStore(
     (s) => s.setEnableHoldToBoost,
+  );
+
+  const homeSectionOrder = usePreferencesStore((s) => s.homeSectionOrder);
+  const setHomeSectionOrder = usePreferencesStore((s) => s.setHomeSectionOrder);
+
+  const manualSourceSelection = usePreferencesStore(
+    (s) => s.manualSourceSelection,
+  );
+  const setManualSourceSelection = usePreferencesStore(
+    (s) => s.setManualSourceSelection,
+  );
+
+  const enableDoubleClickToSeek = usePreferencesStore(
+    (s) => s.enableDoubleClickToSeek,
+  );
+  const setEnableDoubleClickToSeek = usePreferencesStore(
+    (s) => s.setEnableDoubleClickToSeek,
   );
 
   const account = useAuthStore((s) => s.account);
@@ -242,13 +406,21 @@ export function SettingsPage() {
     enableDetailsModal,
     sourceOrder,
     enableSourceOrder,
+    disabledSources,
+    embedOrder,
+    enableEmbedOrder,
+    disabledEmbeds,
     proxyTmdb,
     enableSkipCredits,
     enableImageLogos,
     enableCarouselView,
     forceCompactEpisodeView,
     enableLowPerformanceMode,
+    enableNativeSubtitles,
     enableHoldToBoost,
+    homeSectionOrder,
+    manualSourceSelection,
+    enableDoubleClickToSeek,
   );
 
   const availableSources = useMemo(() => {
@@ -303,11 +475,14 @@ export function SettingsPage() {
         state.enableImageLogos.changed ||
         state.sourceOrder.changed ||
         state.enableSourceOrder.changed ||
+        state.disabledSources.changed ||
         state.proxyTmdb.changed ||
         state.enableCarouselView.changed ||
         state.forceCompactEpisodeView.changed ||
         state.enableLowPerformanceMode.changed ||
-        state.enableHoldToBoost.changed
+        state.enableHoldToBoost.changed ||
+        state.manualSourceSelection.changed ||
+        state.enableDoubleClickToSeek
       ) {
         await updateSettings(backendUrl, account, {
           applicationLanguage: state.appLanguage.state,
@@ -324,11 +499,14 @@ export function SettingsPage() {
           enableImageLogos: state.enableImageLogos.state,
           sourceOrder: state.sourceOrder.state,
           enableSourceOrder: state.enableSourceOrder.state,
+          disabledSources: state.disabledSources.state,
           proxyTmdb: state.proxyTmdb.state,
           enableCarouselView: state.enableCarouselView.state,
           forceCompactEpisodeView: state.forceCompactEpisodeView.state,
           enableLowPerformanceMode: state.enableLowPerformanceMode.state,
           enableHoldToBoost: state.enableHoldToBoost.state,
+          manualSourceSelection: state.manualSourceSelection.state,
+          enableDoubleClickToSeek: state.enableDoubleClickToSeek.state,
         });
       }
       if (state.deviceName.changed) {
@@ -357,6 +535,7 @@ export function SettingsPage() {
     setEnableImageLogos(state.enableImageLogos.state);
     setSourceOrder(state.sourceOrder.state);
     setEnableSourceOrder(state.enableSourceOrder.state);
+    setDisabledSources(state.disabledSources.state);
     setAppLanguage(state.appLanguage.state);
     setTheme(state.theme.state);
     setSubStyling(state.subtitleStyling.state);
@@ -369,6 +548,9 @@ export function SettingsPage() {
     setForceCompactEpisodeView(state.forceCompactEpisodeView.state);
     setEnableLowPerformanceMode(state.enableLowPerformanceMode.state);
     setEnableHoldToBoost(state.enableHoldToBoost.state);
+    setHomeSectionOrder(state.homeSectionOrder.state);
+    setManualSourceSelection(state.manualSourceSelection.state);
+    setEnableDoubleClickToSeek(state.enableDoubleClickToSeek.state);
 
     if (state.profile.state) {
       updateProfile(state.profile.state);
@@ -400,6 +582,7 @@ export function SettingsPage() {
     setEnableImageLogos,
     setSourceOrder,
     setEnableSourceOrder,
+    setDisabledSources,
     setAppLanguage,
     setTheme,
     setSubStyling,
@@ -413,11 +596,18 @@ export function SettingsPage() {
     setForceCompactEpisodeView,
     setEnableLowPerformanceMode,
     setEnableHoldToBoost,
+    setHomeSectionOrder,
+    setManualSourceSelection,
+    setEnableDoubleClickToSeek,
   ]);
   return (
     <SubPageLayout>
       <PageTitle subpage k="global.pages.settings" />
-      <SettingsLayout>
+      <SettingsLayout
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onSearchUnFocus={handleSearchUnFocus}
+      >
         <div id="settings-account">
           <Heading1 border className="!mb-0">
             {t("settings.account.title")}
@@ -444,9 +634,6 @@ export function SettingsPage() {
             <RegisterCalloutPart />
           )}
         </div>
-        <div className="mt-10">
-          <AdminPanelPart />
-        </div>
         <div id="settings-preferences" className="mt-28">
           <PreferencesPart
             language={state.appLanguage.state}
@@ -461,10 +648,16 @@ export function SettingsPage() {
             setSourceOrder={state.sourceOrder.set}
             enableSourceOrder={state.enableSourceOrder.state}
             setenableSourceOrder={state.enableSourceOrder.set}
+            disabledSources={state.disabledSources.state}
+            setDisabledSources={state.disabledSources.set}
             enableLowPerformanceMode={state.enableLowPerformanceMode.state}
             setEnableLowPerformanceMode={state.enableLowPerformanceMode.set}
             enableHoldToBoost={state.enableHoldToBoost.state}
             setEnableHoldToBoost={state.enableHoldToBoost.set}
+            manualSourceSelection={state.manualSourceSelection.state}
+            setManualSourceSelection={state.manualSourceSelection.set}
+            enableDoubleClickToSeek={state.enableDoubleClickToSeek.state}
+            setEnableDoubleClickToSeek={state.enableDoubleClickToSeek.set}
           />
         </div>
         <div id="settings-appearance" className="mt-28">
@@ -484,6 +677,8 @@ export function SettingsPage() {
             setEnableCarouselView={state.enableCarouselView.set}
             forceCompactEpisodeView={state.forceCompactEpisodeView.state}
             setForceCompactEpisodeView={state.forceCompactEpisodeView.set}
+            homeSectionOrder={state.homeSectionOrder.state}
+            setHomeSectionOrder={state.homeSectionOrder.set}
             enableLowPerformanceMode={state.enableLowPerformanceMode.state}
           />
         </div>
