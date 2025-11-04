@@ -237,6 +237,45 @@
       "settings": "Settings",
       "migration": "Migrate Account",
       "jip": "Jip"
+    },
+    "keyboardShortcuts": {
+      "title": "Keyboard Shortcuts",
+      "subtitle": "Hold ` to show this help anytime",
+      "groups": {
+        "videoPlayback": "Video Playback",
+        "jumpToPosition": "Jump to Position",
+        "audioVideo": "Audio & Video",
+        "subtitlesAccessibility": "Subtitles & Accessibility",
+        "interface": "Interface"
+      },
+      "shortcuts": {
+        "playPause": "Play/pause (or hold for 2x speed when enabled)",
+        "playPauseAlt": "Play/pause",
+        "skipForward5": "Skip forward 5 seconds",
+        "skipBackward5": "Skip backward 5 seconds",
+        "skipBackward10": "Skip backward 10 seconds",
+        "skipForward10": "Skip forward 10 seconds",
+        "skipForward1": "Skip forward 1 second (when paused)",
+        "skipBackward1": "Skip backward 1 second (when paused)",
+        "jumpTo0": "Jump to 0% (beginning)",
+        "jumpTo9": "Jump to 90%",
+        "increaseVolume": "Increase volume",
+        "decreaseVolume": "Decrease volume",
+        "mute": "Mute/unmute",
+        "changeSpeed": "Increase/decrease playback speed",
+        "toggleFullscreen": "Toggle fullscreen",
+        "toggleCaptions": "Toggle captions",
+        "syncSubtitlesEarlier": "Sync subtitles earlier (-0.5s)",
+        "syncSubtitlesLater": "Sync subtitles later (+0.5s)",
+        "barrelRoll": "Do a barrel roll! 🌀",
+        "closeOverlay": "Close overlay/modal",
+        "widescreenMode": "to toggle the widescreen button visibility",
+        "copyLinkWithTime": "+ click the title to copy the link with time"
+      },
+      "conditions": {
+        "notInWatchParty": "Not in watch party",
+        "whenPaused": "When paused"
+      }
     }
   },
   "home": {
@@ -364,7 +403,14 @@
     "episode": "Episode",
     "airs": "Airs",
     "endsAt": "Ends at {{time}}",
-    "trailer": "Trailer"
+    "trailer": "Trailer",
+    "collection": {
+      "movies": "Movies",
+      "movie": "Movie",
+      "sortBy": "Sort by",
+      "releaseDate": "Release Date",
+      "rating": "Rating"
+    }
   },
   "migration": {
     "loginRequired": "You must be logged in to migrate your data! Please go back and login to continue.",
@@ -600,7 +646,7 @@
     },
     "menus": {
       "downloads": {
-        "button": "Atempt download",
+        "button": "Attempt download",
         "hlsDownloader": "Or, go to the <0>hls downloader website</0> and paste the playlist URL from below.",
         "disclaimer": "Downloads are taken directly from the provider. P-Stream does not have control over how the downloads are provided.",
         "copyHlsPlaylist": "Copy HLS playlist link",
@@ -813,17 +859,7 @@
         "8": "Set a custom subtitle color!",
         "9": "Migrate your account to a new backend in settings!",
         "10": "Join the Discord!",
-        "11": "Use [ and ] to adjust subtitle timing!",
-        "12": "Press SPACE or K to play/pause!",
-        "13": "Use LEFT and RIGHT arrow keys to skip 5 seconds!",
-        "14": "Use J and L keys to skip 10 seconds!",
-        "15": "Press F to toggle fullscreen!",
-        "16": "Press M to toggle mute!",
-        "17": "Use UP and DOWN arrows to change volume!",
-        "18": "Press < and > to change playback speed!",
-        "19": "Press . and , to move frame by frame when paused!",
-        "20": "Press C to toggle subtitles!",
-        "21": "Press R to do a barrel roll!"
+        "11": "Hold ` to view keyboard shortcuts!"
       }
     },
     "time": {
@@ -1103,9 +1139,10 @@
         "default": "Default",
         "raised": "Raised",
         "depressed": "Depressed",
-        "uniform": "Uniform",
+        "Border": "Border",
         "dropShadow": "Drop Shadow"
-      }
+      },
+      "BorderThicknessLabel": "Border Thickness"
     },
     "unsaved": "You have unsaved changes... ฅ^•ﻌ•^ฅ"
   },
@@ -1232,6 +1269,7 @@
     "cancel": "Cancel",
     "save": "Save",
     "emptyRoom": "No one is in this room yet",
+    "noHost": "No host in this watch party",
     "invalidRoom": "Unable to connect to this room",
     "contentMismatch": "Cannot join watch party: The content does not match the host's content.",
     "episodeMismatch": "Cannot join watch party: You are watching a different episode than the host.",
