@@ -112,6 +112,7 @@ export function useDiscoverMedia({
   providerName,
   mediaTitle,
   isCarouselView = false,
+  enabled = true,
 }: UseDiscoverMediaProps): UseDiscoverMediaReturn {
   const [media, setMedia] = useState<DiscoverMedia[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,6 +121,8 @@ export function useDiscoverMedia({
   const [sectionTitle, setSectionTitle] = useState<string>("");
   const [currentContentType, setCurrentContentType] =
     useState<string>(contentType);
+  const [actualContentType, setActualContentType] =
+    useState<DiscoverContentType>(contentType);
 
   const { t } = useTranslation();
   const userLanguage = useLanguageStore((s) => s.language);
@@ -130,6 +133,7 @@ export function useDiscoverMedia({
     if (contentType !== currentContentType) {
       setMedia([]);
       setCurrentContentType(contentType);
+      setActualContentType(contentType); // Reset actual content type to original
     }
   }, [contentType, currentContentType]);
 
@@ -179,6 +183,11 @@ export function useDiscoverMedia({
 
         // Race between the Trakt request and timeout
         const response = await Promise.race([traktFunction(), timeoutPromise]);
+
+        // Check if response is null
+        if (!response) {
+          throw new Error("Trakt API returned null response");
+        }
 
         // Paginate the results
         const pageSize = isCarouselView ? 20 : 100; // Limit to 20 items for carousels, get more for detailed views
@@ -313,6 +322,15 @@ export function useDiscoverMedia({
   }, [mediaType, formattedLanguage, isCarouselView]);
 
   const fetchMedia = useCallback(async () => {
+    // Skip fetching recommendations if no ID is provided
+    if (contentType === "recommendations" && !id) {
+      setIsLoading(false);
+      setMedia([]);
+      setHasMore(false);
+      setSectionTitle("");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -474,6 +492,7 @@ export function useDiscoverMedia({
         console.info(`Falling back from ${contentType} to ${fallbackType}`);
         try {
           const fallbackData = await attemptFetch(fallbackType);
+          setActualContentType(fallbackType); // Set actual content type to fallback
           setMedia((prevMedia) => {
             // If page is 1, replace the media array, otherwise append
             return page === 1
@@ -512,8 +531,11 @@ export function useDiscoverMedia({
       setMedia([]);
       setCurrentContentType(contentType);
     }
-    fetchMedia();
-  }, [fetchMedia, contentType, currentContentType, page, id]);
+    // Only fetch when enabled
+    if (enabled) {
+      fetchMedia();
+    }
+  }, [fetchMedia, contentType, currentContentType, page, id, enabled]);
 
   return {
     media,
@@ -522,5 +544,6 @@ export function useDiscoverMedia({
     hasMore,
     refetch: fetchMedia,
     sectionTitle,
+    actualContentType,
   };
 }

@@ -14,19 +14,23 @@ export interface PreferencesStore {
   forceCompactEpisodeView: boolean;
   sourceOrder: string[];
   enableSourceOrder: boolean;
+  lastSuccessfulSource: string | null;
+  enableLastSuccessfulSource: boolean;
   disabledSources: string[];
   embedOrder: string[];
   enableEmbedOrder: boolean;
   disabledEmbeds: string[];
   proxyTmdb: boolean;
   febboxKey: string | null;
-  realDebridKey: string | null;
+  debridToken: string | null;
+  debridService: string;
   enableLowPerformanceMode: boolean;
   enableNativeSubtitles: boolean;
   enableHoldToBoost: boolean;
   homeSectionOrder: string[];
   manualSourceSelection: boolean;
   enableDoubleClickToSeek: boolean;
+  enableAutoResumeOnPlaybackError: boolean;
 
   setEnableThumbnails(v: boolean): void;
   setEnableAutoplay(v: boolean): void;
@@ -39,19 +43,23 @@ export interface PreferencesStore {
   setForceCompactEpisodeView(v: boolean): void;
   setSourceOrder(v: string[]): void;
   setEnableSourceOrder(v: boolean): void;
+  setLastSuccessfulSource(v: string | null): void;
+  setEnableLastSuccessfulSource(v: boolean): void;
   setDisabledSources(v: string[]): void;
   setEmbedOrder(v: string[]): void;
   setEnableEmbedOrder(v: boolean): void;
   setDisabledEmbeds(v: string[]): void;
   setProxyTmdb(v: boolean): void;
   setFebboxKey(v: string | null): void;
-  setRealDebridKey(v: string | null): void;
+  setdebridToken(v: string | null): void;
+  setdebridService(v: string): void;
   setEnableLowPerformanceMode(v: boolean): void;
   setEnableNativeSubtitles(v: boolean): void;
   setEnableHoldToBoost(v: boolean): void;
   setHomeSectionOrder(v: string[]): void;
   setManualSourceSelection(v: boolean): void;
   setEnableDoubleClickToSeek(v: boolean): void;
+  setEnableAutoResumeOnPlaybackError(v: boolean): void;
 }
 
 export const usePreferencesStore = create(
@@ -68,19 +76,23 @@ export const usePreferencesStore = create(
       forceCompactEpisodeView: false,
       sourceOrder: [],
       enableSourceOrder: false,
+      lastSuccessfulSource: null,
+      enableLastSuccessfulSource: false,
       disabledSources: [],
       embedOrder: [],
       enableEmbedOrder: false,
       disabledEmbeds: [],
       proxyTmdb: false,
       febboxKey: null,
-      realDebridKey: null,
+      debridToken: null,
+      debridService: "realdebrid",
       enableLowPerformanceMode: false,
       enableNativeSubtitles: false,
       enableHoldToBoost: true,
       homeSectionOrder: ["watching", "bookmarks"],
       manualSourceSelection: false,
       enableDoubleClickToSeek: false,
+      enableAutoResumeOnPlaybackError: true,
       setEnableThumbnails(v) {
         set((s) => {
           s.enableThumbnails = v;
@@ -136,6 +148,16 @@ export const usePreferencesStore = create(
           s.enableSourceOrder = v;
         });
       },
+      setLastSuccessfulSource(v) {
+        set((s) => {
+          s.lastSuccessfulSource = v;
+        });
+      },
+      setEnableLastSuccessfulSource(v) {
+        set((s) => {
+          s.enableLastSuccessfulSource = v;
+        });
+      },
       setDisabledSources(v) {
         set((s) => {
           s.disabledSources = v;
@@ -166,9 +188,14 @@ export const usePreferencesStore = create(
           s.febboxKey = v;
         });
       },
-      setRealDebridKey(v) {
+      setdebridToken(v) {
         set((s) => {
-          s.realDebridKey = v;
+          s.debridToken = v;
+        });
+      },
+      setdebridService(v) {
+        set((s) => {
+          s.debridService = v;
         });
       },
       setEnableLowPerformanceMode(v) {
@@ -204,6 +231,11 @@ export const usePreferencesStore = create(
       setEnableDoubleClickToSeek(v) {
         set((s) => {
           s.enableDoubleClickToSeek = v;
+        });
+      },
+      setEnableAutoResumeOnPlaybackError(v) {
+        set((s) => {
+          s.enableAutoResumeOnPlaybackError = v;
         });
       },
     })),

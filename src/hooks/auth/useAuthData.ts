@@ -32,7 +32,8 @@ export function useAuthData() {
     (s) => s.importSubtitleLanguage,
   );
   const setFebboxKey = usePreferencesStore((s) => s.setFebboxKey);
-  const setRealDebridKey = usePreferencesStore((s) => s.setRealDebridKey);
+  const setdebridToken = usePreferencesStore((s) => s.setdebridToken);
+  const setdebridService = usePreferencesStore((s) => s.setdebridService);
 
   const replaceBookmarks = useBookmarkStore((s) => s.replaceBookmarks);
   const replaceItems = useProgressStore((s) => s.replaceItems);
@@ -58,6 +59,12 @@ export function useAuthData() {
   const setEnableSourceOrder = usePreferencesStore(
     (s) => s.setEnableSourceOrder,
   );
+  const setLastSuccessfulSource = usePreferencesStore(
+    (s) => s.setLastSuccessfulSource,
+  );
+  const setEnableLastSuccessfulSource = usePreferencesStore(
+    (s) => s.setEnableLastSuccessfulSource,
+  );
   const setDisabledSources = usePreferencesStore((s) => s.setDisabledSources);
   const setEmbedOrder = usePreferencesStore((s) => s.setEmbedOrder);
   const setEnableEmbedOrder = usePreferencesStore((s) => s.setEnableEmbedOrder);
@@ -81,6 +88,9 @@ export function useAuthData() {
   const setManualSourceSelection = usePreferencesStore(
     (s) => s.setManualSourceSelection,
   );
+  const setEnableAutoResumeOnPlaybackError = usePreferencesStore(
+    (s) => s.setEnableAutoResumeOnPlaybackError,
+  );
 
   const login = useCallback(
     async (
@@ -95,6 +105,7 @@ export function useAuthData() {
         sessionId: loginResponse.session.id,
         deviceName: session.device,
         profile: user.profile,
+        nickname: user.nickname,
         seed,
       };
       setAccount(account);
@@ -193,6 +204,14 @@ export function useAuthData() {
         setEnableSourceOrder(settings.enableSourceOrder);
       }
 
+      if (settings.lastSuccessfulSource !== undefined) {
+        setLastSuccessfulSource(settings.lastSuccessfulSource);
+      }
+
+      if (settings.enableLastSuccessfulSource !== undefined) {
+        setEnableLastSuccessfulSource(settings.enableLastSuccessfulSource);
+      }
+
       if (settings.disabledSources !== undefined) {
         setDisabledSources(settings.disabledSources ?? []);
       }
@@ -217,8 +236,12 @@ export function useAuthData() {
         setFebboxKey(settings.febboxKey);
       }
 
-      if (settings.realDebridKey !== undefined) {
-        setRealDebridKey(settings.realDebridKey);
+      if (settings.debridToken !== undefined) {
+        setdebridToken(settings.debridToken);
+      }
+
+      if (settings.debridService !== undefined) {
+        setdebridService(settings.debridService);
       }
 
       if (settings.enableLowPerformanceMode !== undefined) {
@@ -246,6 +269,12 @@ export function useAuthData() {
       if (settings.enableDoubleClickToSeek !== undefined) {
         setEnableDoubleClickToSeek(settings.enableDoubleClickToSeek);
       }
+
+      if (settings.enableAutoResumeOnPlaybackError !== undefined) {
+        setEnableAutoResumeOnPlaybackError(
+          settings.enableAutoResumeOnPlaybackError,
+        );
+      }
     },
     [
       replaceBookmarks,
@@ -265,19 +294,23 @@ export function useAuthData() {
       setForceCompactEpisodeView,
       setSourceOrder,
       setEnableSourceOrder,
+      setLastSuccessfulSource,
+      setEnableLastSuccessfulSource,
       setDisabledSources,
       setEmbedOrder,
       setEnableEmbedOrder,
       setDisabledEmbeds,
       setProxyTmdb,
       setFebboxKey,
-      setRealDebridKey,
+      setdebridToken,
+      setdebridService,
       setEnableLowPerformanceMode,
       setEnableNativeSubtitles,
       setEnableHoldToBoost,
       setHomeSectionOrder,
       setManualSourceSelection,
       setEnableDoubleClickToSeek,
+      setEnableAutoResumeOnPlaybackError,
     ],
   );
 

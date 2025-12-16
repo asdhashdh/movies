@@ -23,6 +23,7 @@ export interface UseDiscoverMediaProps {
   providerName?: string;
   mediaTitle?: string;
   isCarouselView?: boolean;
+  enabled?: boolean;
 }
 
 export interface DiscoverMedia {
@@ -46,6 +47,7 @@ export interface UseDiscoverMediaReturn {
   hasMore: boolean;
   refetch: () => Promise<void>;
   sectionTitle: string;
+  actualContentType: DiscoverContentType;
 }
 
 export interface Provider {

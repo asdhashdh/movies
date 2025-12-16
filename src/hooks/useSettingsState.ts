@@ -42,10 +42,12 @@ export function useSettingsState(
   appLanguage: string,
   subtitleStyling: SubtitleStyling,
   deviceName: string,
+  nickname: string,
   proxyUrls: string[] | null,
   backendUrl: string | null,
   febboxKey: string | null,
-  realDebridKey: string | null,
+  debridToken: string | null,
+  debridService: string,
   profile:
     | {
         colorA: string;
@@ -60,6 +62,8 @@ export function useSettingsState(
   enableDetailsModal: boolean,
   sourceOrder: string[],
   enableSourceOrder: boolean,
+  lastSuccessfulSource: string | null,
+  enableLastSuccessfulSource: boolean,
   disabledSources: string[],
   embedOrder: string[],
   enableEmbedOrder: boolean,
@@ -75,6 +79,7 @@ export function useSettingsState(
   homeSectionOrder: string[],
   manualSourceSelection: boolean,
   enableDoubleClickToSeek: boolean,
+  enableAutoResumeOnPlaybackError: boolean,
 ) {
   const [proxyUrlsState, setProxyUrls, resetProxyUrls, proxyUrlsChanged] =
     useDerived(proxyUrls);
@@ -83,11 +88,17 @@ export function useSettingsState(
   const [febboxKeyState, setFebboxKey, resetFebboxKey, febboxKeyChanged] =
     useDerived(febboxKey);
   const [
-    realDebridKeyState,
-    setRealDebridKey,
-    resetRealDebridKey,
-    realDebridKeyChanged,
-  ] = useDerived(realDebridKey);
+    debridTokenState,
+    setdebridToken,
+    resetdebridToken,
+    debridTokenChanged,
+  ] = useDerived(debridToken);
+  const [
+    debridServiceState,
+    setdebridService,
+    _resetdebridService,
+    debridServiceChanged,
+  ] = useDerived(debridService);
   const [themeState, setTheme, resetTheme, themeChanged] = useDerived(theme);
   const setPreviewTheme = usePreviewThemeStore((s) => s.setPreviewTheme);
   const resetPreviewTheme = useCallback(
@@ -108,6 +119,8 @@ export function useSettingsState(
     resetDeviceName,
     deviceNameChanged,
   ] = useDerived(deviceName);
+  const [nicknameState, setNicknameState, resetNickname, nicknameChanged] =
+    useDerived(nickname);
   const [profileState, setProfileState, resetProfile, profileChanged] =
     useDerived(profile);
   const [
@@ -164,6 +177,18 @@ export function useSettingsState(
     resetEnableSourceOrder,
     enableSourceOrderChanged,
   ] = useDerived(enableSourceOrder);
+  const [
+    lastSuccessfulSourceState,
+    setLastSuccessfulSourceState,
+    resetLastSuccessfulSource,
+    lastSuccessfulSourceChanged,
+  ] = useDerived(lastSuccessfulSource);
+  const [
+    enableLastSuccessfulSourceState,
+    setEnableLastSuccessfulSourceState,
+    resetEnableLastSuccessfulSource,
+    enableLastSuccessfulSourceChanged,
+  ] = useDerived(enableLastSuccessfulSource);
   const [
     disabledSourcesState,
     setDisabledSourcesState,
@@ -238,6 +263,12 @@ export function useSettingsState(
     resetEnableDoubleClickToSeek,
     enableDoubleClickToSeekChanged,
   ] = useDerived(enableDoubleClickToSeek);
+  const [
+    enableAutoResumeOnPlaybackErrorState,
+    setEnableAutoResumeOnPlaybackErrorState,
+    resetEnableAutoResumeOnPlaybackError,
+    enableAutoResumeOnPlaybackErrorChanged,
+  ] = useDerived(enableAutoResumeOnPlaybackError);
 
   function reset() {
     resetTheme();
@@ -247,8 +278,9 @@ export function useSettingsState(
     resetProxyUrls();
     resetBackendUrl();
     resetFebboxKey();
-    resetRealDebridKey();
+    resetdebridToken();
     resetDeviceName();
+    resetNickname();
     resetProfile();
     resetEnableThumbnails();
     resetEnableAutoplay();
@@ -259,6 +291,8 @@ export function useSettingsState(
     resetEnableImageLogos();
     resetSourceOrder();
     resetEnableSourceOrder();
+    resetLastSuccessfulSource();
+    resetEnableLastSuccessfulSource();
     resetDisabledSources();
     resetEmbedOrder();
     resetEnableEmbedOrder();
@@ -272,6 +306,7 @@ export function useSettingsState(
     resetHomeSectionOrder();
     resetManualSourceSelection();
     resetEnableDoubleClickToSeek();
+    resetEnableAutoResumeOnPlaybackError();
   }
 
   const changed =
@@ -279,10 +314,12 @@ export function useSettingsState(
     appLanguageChanged ||
     subStylingChanged ||
     deviceNameChanged ||
+    nicknameChanged ||
     backendUrlChanged ||
     proxyUrlsChanged ||
     febboxKeyChanged ||
-    realDebridKeyChanged ||
+    debridTokenChanged ||
+    debridServiceChanged ||
     profileChanged ||
     enableThumbnailsChanged ||
     enableAutoplayChanged ||
@@ -293,6 +330,8 @@ export function useSettingsState(
     enableImageLogosChanged ||
     sourceOrderChanged ||
     enableSourceOrderChanged ||
+    lastSuccessfulSourceChanged ||
+    enableLastSuccessfulSourceChanged ||
     disabledSourcesChanged ||
     embedOrderChanged ||
     enableEmbedOrderChanged ||
@@ -305,7 +344,8 @@ export function useSettingsState(
     enableHoldToBoostChanged ||
     homeSectionOrderChanged ||
     manualSourceSelectionChanged ||
-    enableDoubleClickToSeekChanged;
+    enableDoubleClickToSeekChanged ||
+    enableAutoResumeOnPlaybackErrorChanged;
 
   return {
     reset,
@@ -330,6 +370,11 @@ export function useSettingsState(
       set: setDeviceNameState,
       changed: deviceNameChanged,
     },
+    nickname: {
+      state: nicknameState,
+      set: setNicknameState,
+      changed: nicknameChanged,
+    },
     proxyUrls: {
       state: proxyUrlsState,
       set: setProxyUrls,
@@ -345,10 +390,15 @@ export function useSettingsState(
       set: setFebboxKey,
       changed: febboxKeyChanged,
     },
-    realDebridKey: {
-      state: realDebridKeyState,
-      set: setRealDebridKey,
-      changed: realDebridKeyChanged,
+    debridToken: {
+      state: debridTokenState,
+      set: setdebridToken,
+      changed: debridTokenChanged,
+    },
+    debridService: {
+      state: debridServiceState,
+      set: setdebridService,
+      changed: debridServiceChanged,
     },
     profile: {
       state: profileState,
@@ -399,6 +449,16 @@ export function useSettingsState(
       state: enableSourceOrderState,
       set: setEnableSourceOrderState,
       changed: enableSourceOrderChanged,
+    },
+    lastSuccessfulSource: {
+      state: lastSuccessfulSourceState,
+      set: setLastSuccessfulSourceState,
+      changed: lastSuccessfulSourceChanged,
+    },
+    enableLastSuccessfulSource: {
+      state: enableLastSuccessfulSourceState,
+      set: setEnableLastSuccessfulSourceState,
+      changed: enableLastSuccessfulSourceChanged,
     },
     proxyTmdb: {
       state: proxyTmdbState,
@@ -464,6 +524,11 @@ export function useSettingsState(
       state: enableDoubleClickToSeekState,
       set: setEnableDoubleClickToSeekState,
       changed: enableDoubleClickToSeekChanged,
+    },
+    enableAutoResumeOnPlaybackError: {
+      state: enableAutoResumeOnPlaybackErrorState,
+      set: setEnableAutoResumeOnPlaybackErrorState,
+      changed: enableAutoResumeOnPlaybackErrorChanged,
     },
   };
 }

@@ -39,19 +39,33 @@ export function EmbedOption(props: {
     return sourceMeta?.name ?? unknownEmbedName;
   }, [props.embedId, unknownEmbedName]);
 
-  const { run, errored, loading } = useEmbedScraping(
+  const { run, errored, loading, notFound } = useEmbedScraping(
     props.routerId,
     props.sourceId,
     props.url,
     props.embedId,
   );
 
+  let rightSide;
+  if (loading) {
+    rightSide = undefined; // Let SelectableLink handle loading
+  } else if (notFound) {
+    rightSide = (
+      <div className="flex items-center text-video-scraping-noresult">
+        <div className="w-4 h-4 rounded-full border-2 border-current bg-current flex items-center justify-center">
+          <div className="w-2 h-0.5 bg-background-main rounded-full" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SelectableLink
       loading={loading}
-      error={errored}
+      error={errored && !notFound}
       onClick={run}
       selected={props.embedId === currentEmbedId}
+      rightSide={rightSide}
     >
       <span className="flex flex-col">
         <span>{embedName}</span>
@@ -144,6 +158,12 @@ export function SourceSelectionView({
   const currentSourceId = usePlayerStore((s) => s.sourceId);
   const preferredSourceOrder = usePreferencesStore((s) => s.sourceOrder);
   const enableSourceOrder = usePreferencesStore((s) => s.enableSourceOrder);
+  const lastSuccessfulSource = usePreferencesStore(
+    (s) => s.lastSuccessfulSource,
+  );
+  const enableLastSuccessfulSource = usePreferencesStore(
+    (s) => s.enableLastSuccessfulSource,
+  );
   const disabledSources = usePreferencesStore((s) => s.disabledSources);
 
   const sources = useMemo(() => {
@@ -151,15 +171,36 @@ export function SourceSelectionView({
     const allSources = getCachedMetadata()
       .filter((v) => v.type === "source")
       .filter((v) => v.mediaTypes?.includes(metaType))
-      .filter((v) => !disabledSources.includes(v.id));
+      .filter((v) => !(disabledSources || []).includes(v.id));
 
     if (!enableSourceOrder || preferredSourceOrder.length === 0) {
+      // Even without custom source order, prioritize last successful source if enabled
+      if (enableLastSuccessfulSource && lastSuccessfulSource) {
+        const lastSourceIndex = allSources.findIndex(
+          (s) => s.id === lastSuccessfulSource,
+        );
+        if (lastSourceIndex !== -1) {
+          const lastSource = allSources.splice(lastSourceIndex, 1)[0];
+          return [lastSource, ...allSources];
+        }
+      }
       return allSources;
     }
 
-    // Sort sources according to preferred order
+    // Sort sources according to preferred order, but prioritize last successful source
     const orderedSources = [];
     const remainingSources = [...allSources];
+
+    // First, add the last successful source if it exists, is available, and the feature is enabled
+    if (enableLastSuccessfulSource && lastSuccessfulSource) {
+      const lastSourceIndex = remainingSources.findIndex(
+        (s) => s.id === lastSuccessfulSource,
+      );
+      if (lastSourceIndex !== -1) {
+        orderedSources.push(remainingSources[lastSourceIndex]);
+        remainingSources.splice(lastSourceIndex, 1);
+      }
+    }
 
     // Add sources in preferred order
     for (const sourceId of preferredSourceOrder) {
@@ -174,7 +215,14 @@ export function SourceSelectionView({
     orderedSources.push(...remainingSources);
 
     return orderedSources;
-  }, [metaType, preferredSourceOrder, enableSourceOrder, disabledSources]);
+  }, [
+    metaType,
+    preferredSourceOrder,
+    enableSourceOrder,
+    disabledSources,
+    lastSuccessfulSource,
+    enableLastSuccessfulSource,
+  ]);
 
   return (
     <>
@@ -183,7 +231,9 @@ export function SourceSelectionView({
         rightSide={
           <button
             type="button"
-            onClick={() => window.open("/settings#source-order")}
+            onClick={() => {
+              window.location.href = "/settings#source-order";
+            }}
             className="-mr-2 -my-1 px-2 p-[0.4em] rounded tabbable hover:bg-video-context-light hover:bg-opacity-10"
           >
             {t("player.menus.sources.editOrder")}

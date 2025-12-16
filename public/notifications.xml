@@ -9,6 +9,148 @@
     <atom:link href="https://pstream.mov/notifications.xml" rel="self" type="application/rss+xml" />
 
     <item>
+      <guid>notification-053</guid>
+      <title>New Userscript alternative to the extension!</title>
+      <description>If you prefer to use a userscript instead of the extension, you now have the option! 
+      
+It should work almost exactly the same as the extension, but without the need to install an extension. Unfortunately, our Firefox extension store page keeps getting taken down, so this is the alternative until we can get it back up or if you install the .xpi manually.
+
+Some things to note:
+
+- The extension is still the most reliable method!
+- This does not currently work in Safari or Orion due to Webkit’s limitations with webRequest APIs. :(
+
+Thanks to Duplicake for the incredible help building this!
+
+Use the link below to install the userscript into Violentmonkey or Tampermonkey!
+
+P.S. We're still working on getting some new sources online, so expect more updates soon!
+      </description>
+      <link>https://raw.githubusercontent.com/p-stream/Userscript/main/p-stream.user.js</link>
+      <pubDate>Sun, 14 Dec 2025 15:00:00 MST</pubDate>
+      <category>feature</category>
+    </item>
+
+    <item>
+      <guid>notification-052</guid>
+      <title>Thanks to everyone who has supported!</title>
+      <description>We've reached our goal of $300! Thanks to everyone who has supported and we'll be working hard to bring you new great things!
+
+We're working on fixing those source issues and hope to have everything back up and running soon!
+
+I'll be reaching out to everyone who has donated to get custom email addresses for the @pstream.mov domain! You can still donate at the link below!
+      </description>
+      <link>https://rentry.co/nnqtas3e</link>
+      <pubDate>Tue, 09 Dec 2025 17:30:00 MST</pubDate>
+      <category>announcement</category>
+    </item>
+
+    <item>
+      <guid>notification-051</guid>
+      <title>Xprime has been disabled. More info below!</title>
+      <description>Yes this is unfortunate, Xprime has been disabled due to funding issues on their end. 
+
+Xprime asked if we could introduce ads to P-Stream, and after some consideration and ad testing last week, the P-Stream team and I have decided not to add ads to P-Stream. Ads are not only unattractive, but unsafe and against the team's morals. 
+
+movie-web (what P-Stream was forked from) was created to be easily self-hostable and ad free. And though the media landscape has changed (cors on streams and our scrapers getting blocked) we've still take this into consideration. I still believe P-Stream is better without ads, and our single banner ad reflects this; its unobtrusive and safe. 
+
+Xprime may come back in the future, but we're already working on a new source that should be just as good or better. Plus we will continue to support FED API and all the extension sources that make P-Stream (and self hosted sites) amazing. 
+
+Thanks to everyone who has supported and we'll be working hard to bring you new great things!
+      </description>
+      <pubDate>Sat, 06 Dec 2025 16:00:00 MST</pubDate>
+      <category>announcement</category>
+    </item>
+
+    <item>
+      <guid>notification-050</guid>
+      <title>New alerts for source failures!</title>
+      <description>I just added a new alert that pops up if FED API, FED DB, or XPrime sources fail the turnstile check. Previously it would just show the ⚠️ icon and give no explanation why it failed. Now you know why! Simply go back and select that source again or reload the page!
+      </description>
+      <pubDate>Tue, 2 Dec 2025 13:11:00 MST</pubDate>
+      <category>Feature</category>
+    </item>
+
+    <item>
+      <guid>notification-049</guid>
+      <title>P-Stream v5.3.2 released!</title>
+      <description>Many awesome changes and fixes in this release! Some seasonal additions as well! And yes, we skipped a version, it was super small.
+
+Additions:
+- Added auto-resume on playback error setting. Enabled by default. When enabled, P-Stream will automatically resume playback from the next source if the current source fails.
+- Added new trailers and similar media carousels to the details modal!
+- Added Transcript view for subtitles! View the entire transcript of the current subtitle.
+- Added nickname to user account settings (used in the XP app and for watch parties!)
+- Added Frost and Christmas themes! 🎄
+- Added Christmas movies list to all movies lists page!
+- Added a new subtitle source: Granite!
+- Migration features, such as downloading your data, now includes your settings and preferences!
+
+Fixes:
+- Fixed Rotten Tomatoes scores not being displayed correctly!
+- Fixed device name decryption errors causing the settings page to be inaccessible.
+- Fixed More Content pages when our API fails, now shows correct media when our API fails and also scrolls to the top. Big fix for self hosters.
+- Fixed source selection part not respecting disabled sources.
+- Fixed some stutters when scrolling through the discover page. Again.
+- Fixed captions not working for MP4 sources.
+- Fixed subtitle delay getting reset when double pressing to copy.
+
+Thanks to everyone who has supported P-Stream! We couldn't do it without you!
+
+We're sorry about some of the connectivity issues recently, but they should be fixed now!
+
+To give back to those who have supported, we will **soon** be including a custom @pstream.mov email to anyone who has donated in the last month and anyone who donates at least $1/mo going forward. Both inbox and forwarding will be supported. Stay tuned for updates on this!
+      </description>
+      <link>https://pstream.mov/</link>
+      <pubDate>Mon, 01 Dec 2025 19:10:00 MST</pubDate>
+      <category>update</category>
+    </item>
+
+    <item>
+      <guid>notification-048</guid>
+      <title>P-Stream v5.3.0 released!</title>
+      <description>Lots of quality of life improvements and changes and a huge number of bugs fixed!
+
+Additions:
+- Made the skip intro button available to all users, not just those with a febbox token. Though the one with febbox is still the best quality!
+- Added a new "Last Used Source" setting. This will automatically prioritize the source that successfully provided content for the previous episode.
+- Improved thumbnail generation to be more accurate. Now generates 127 thumbnails instead of 63, and generates them randomly rather than sequentially.
+- Added the ability to copy a specific subtitle with its delay value to your clipboard and a paste button to paste it as the current subtitle. Great for moving subtitles between sources!
+- Reworked the settings page to be more user friendly on mobile devices. It's now broken into seperate pages for each section.
+- Added a subtle fade in effect to all images being loaded.
+- Added new toggle to disable the caption background blur effect. This fixes flickering on some browsers with HDR content.
+- Added the ability to bookmark an entire movie collection at once as a group.
+- Added the ability to rename and edit bookmark groups.
+- Added the ability to edit the title and year of a bookmark.
+- Moved reorder button to the settings page.
+- Hid arrow buttons on carousels when at the start or end of the carousel. (Thanks @Smith M.)
+- Added a border to the time stamp popup when hovering over the progress bar. (Thanks @Zisra)
+
+Fixes:
+- Fixed watch progress getting reset when using manual source selection.
+- Encoded all search queries so it's now possible to search for movies and shows with special characters like "V/H/S".
+- Fixed native subtitles not being displayed correctly and not showing in PiP and for mp4 streams.
+- Fixed the PiP button not displaying on mobile devices anymore.
+- Reworked the discover page to load much faster and more efficiently.
+- Fixed the febbox token input not fitting correctly on mobile devices.
+- Fixed finished and unwatched movies and episodes being saved, yet never being shown. They wont save anymore!
+- 0-9 keyboard shortcuts to skip to 0-90% progress no longer work when other keys are held down.
+- Fixed the search bar not being positioned correctly on mobile devices, especially within the PWA.
+- Fixed "i" being shown as "I" in subtitles, this was an issue with some languages that use lowercase "i" intentionally.
+- Fixed watch parties not able to be joined from the home page.
+- Updated the style of many outdated elements on the site. 
+- Various other minor bugs squashed!
+
+Thanks to everyone who has been testing the beta and providing feedback!
+
+P-Stream has partnered with Neon Next Generation Pty Ltd. for this release! They offer high quality web and server hosting with a free virtual private container business plan! Use code "pstream" for 25% off your first 3 months! (link below)
+      </description>
+      <link>https://neonnextgeneration.com</link>
+      <pubDate>Mon, 10 Nov 2025 13:00:00 MST</pubDate>
+      <category>update</category>
+    </item>
+
+    <item>
       <guid>notification-047</guid>
       <title>Halloween Movies List Added!</title>
       <description>We've added a new list of Halloween movies to the site! You can find it in the "Discover All Lists" page or by pressing the link below! Happy Halloween! 🎃👻
@@ -152,7 +294,7 @@ It will improve uptime for FED API and faster EU streams, another proxy which we
 
 If you are interested in donating, please check the link below!
       </description>
-      <link>https://rentry.co/h5mypdfs</link>
+      <link>https://rentry.co/nnqtas3e</link>
       <pubDate>Sat, 06 Sep 2025 14:42:00 MST</pubDate>
       <category>announcement</category>
     </item>

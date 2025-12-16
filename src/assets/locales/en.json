@@ -286,7 +286,6 @@
         "dropdown": {
           "placeholderButton": "Add to group",
           "empty": "No groups yet",
-          "addButton": "Add",
           "removeFromGroup": "Remove from group",
           "removeAll": "Remove all"
         },
@@ -297,7 +296,27 @@
           "description": "Drag and drop to reorder your bookmark groups",
           "cancel": "Cancel",
           "save": "Save"
+        },
+        "editGroup": {
+          "title": "Edit Group",
+          "description": "Edit the name and icon of your bookmark group",
+          "cancel": "Cancel",
+          "save": "Save",
+          "affectsBookmarks": "This will affect {{count}} bookmark(s)",
+          "nameLabel": "Group name",
+          "namePlaceholder": "Enter a name for your group"
         }
+      },
+      "edit": {
+        "title": "Edit Bookmark",
+        "description": "Edit the details for this bookmark",
+        "cancel": "Cancel",
+        "save": "Save",
+        "groupsLabel": "Groups",
+        "titleLabel": "Title",
+        "titlePlaceholder": "Enter a title for your bookmark",
+        "yearLabel": "Year",
+        "yearPlaceholder": "Enter a year for your bookmark"
       }
     },
     "continueWatching": {
@@ -373,6 +392,18 @@
           "It's the Great Pumpkin, Charlie Brown!"
         ]
       }
+    },
+    "support": {
+      "title": "P-Stream needs your help!",
+      "description": "P-Stream is run at a loss, and we need help to keep it ad free! If you enjoy using P-Stream, please consider donating to help us cover our costs.",
+      "moreInfo": "More info",
+      "explanation": "If you aren't using the extension or don't have FED API set up, it may be harder to find content! We want to fix this, but it's a lot harder to provide content without expensive servers. So please, if you enjoy using P-Stream, please consider donating to help us cover our growing costs.",
+      "explanation2": "If you want more info, please join our ",
+      "discord": "Discord",
+      "thankYou": "Thank you for your support!",
+      "donate": "Donate",
+      "label": "Project Funding: ${{current}} / ${{goal}}",
+      "complete": "complete"
     }
   },
   "media": {
@@ -404,6 +435,8 @@
     "airs": "Airs",
     "endsAt": "Ends at {{time}}",
     "trailer": "Trailer",
+    "trailers": "Trailers",
+    "similar": "Similar",
     "collection": {
       "movies": "Movies",
       "movie": "Movie",
@@ -439,6 +472,15 @@
         }
       }
     },
+    "preview": {
+      "downloadDescription": "Download includes:",
+      "uploadDescription": "Data to upload:",
+      "items": {
+        "bookmarks": "Bookmarked media",
+        "progress": "Watch progress",
+        "settings": "Settings & Preferences"
+      }
+    },
     "direct": {
       "title": "Direct migration",
       "description": "Enter the destination backend URL to migrate your current account data to a new backend. This keeps your passphrase the same!",
@@ -459,11 +501,6 @@
     "download": {
       "title": "Download data",
       "description": "This will download your data to your device. You can then upload it to the new server or just keep it for safekeeping.",
-      "items": {
-        "description": "Download includes:",
-        "bookmarks": "Bookmarked media",
-        "progress": "Watch progress"
-      },
       "status": {
         "error": "Failed to download your data. 😿",
         "success": "Your data has been downloaded successfully! 🎉"
@@ -489,12 +526,8 @@
         "change": "Change file",
         "name": "File name"
       },
-      "dataPreview": "Preview:",
-      "items": {
-        "bookmarks": "Bookmarked media",
-        "progress": "Watch progress"
-      },
       "exportedOn": "Exported on",
+      "previewTitle": "Preview:",
       "button": {
         "import": "Import data",
         "processing": "Processing...",
@@ -546,6 +579,8 @@
       "extensionHelp": "If you've installed the extension but it's not detected, <bold>open the extension through your browsers extension menu</bold> and follow the steps on screen.",
       "linkChrome": "Install Chrome extension",
       "linkFirefox": "Install Firefox extension",
+      "linkUserscript": "Alternative Userscript",
+      "userscriptNote": "(The extension is more reliable than the userscript!)",
       "notDetecting": "Installed on Chrome, but the site isn't detecting it? Try reloading the page!",
       "notDetectingAction": "Reload page",
       "status": {
@@ -589,7 +624,7 @@
           "defaultDescription": "Uses P-Stream's built-in proxy. It's the easiest option but might be slower due to shared bandwidth.",
           "fedapi": {
             "fedapi": "Additional: Febbox token",
-            "fedapiDescription": "Bring your own FREE Febbox account to gain access to FED API and CIA API, the best sources with 4K quality, Dolby Atmos, skip intro and the fastest load times! Highly recommended option!"
+            "fedapiDescription": "Bring your own FREE Febbox account to gain access to FED API, the best sources with 4K quality, Dolby Atmos, skip intro and the fastest load times! Highly recommended option!"
           },
           "outro": "If you have more questions on how this works, feel free to ask on the <0>P-Stream Discord</0> server!"
         },
@@ -626,6 +661,9 @@
           "description": "Setup a free proxy in just 5 minutes! Improves loading reliability!",
           "quality": "Good quality",
           "title": "Custom proxy"
+        },
+        "addons": {
+          "title": "Additional sources:"
         }
       },
       "title": "Let's get you setup with P-Stream 🥳"
@@ -736,6 +774,8 @@
       },
       "subtitles": {
         "customChoice": "Drop or upload file",
+        "pasteChoice": "Paste subtitle data",
+        "doubleClickToCopy": "Double click to copy subtitle data",
         "customizeLabel": "Customize",
         "previewLabel": "Subtitle preview:",
         "offChoice": "Off",
@@ -743,6 +783,7 @@
         "SourceChoice": "Source Subtitles",
         "OpenSubtitlesChoice": "External Subtitles",
         "loadingExternal": "Loading external subtitles...",
+        "transcriptChoice": "Transcript",
         "settings": {
           "backlink": "Custom subtitles",
           "delay": "Subtitle delay",
@@ -756,8 +797,8 @@
         "refreshing": "Refreshing...",
         "empty": "There are no provided subtitles for this.",
         "notFound": "None of the available options match your query",
-        "useNativeSubtitles": "Use native video subtitles",
-        "useNativeSubtitlesDescription": "May fix subtitles when casting and in PiP",
+        "useNativeSubtitles": "Native video subtitles",
+        "useNativeSubtitlesDescription": "Broadcast subtitles for native fullscreen and PiP",
         "delayLate": "Heard audio",
         "delayEarly": "Saw caption"
       },
@@ -819,9 +860,11 @@
         "errorNetwork": "Some kind of network error occurred which prevented the media from being successfully fetched, despite having previously been available.",
         "errorNotSupported": "The media or media provider object is not supported."
       },
+      "autoResumeText": "There was an error trying to play the media 😖. Automatically trying the other sources...",
       "copyDebugInfo": "Copy debug info",
       "debugInfo": "Check console for more details.",
       "homeButton": "Go home",
+      "resumeButton": "Try next sources",
       "text": "There was an error trying to play the media 😖. Please try again or try a different source!",
       "title": "Failed to play video!"
     },
@@ -921,8 +964,13 @@
     "search": {
       "placeholder": "Search settings..."
     },
+    "all": {
+      "title": "All Settings"
+    },
     "account": {
       "accountDetails": {
+        "nicknameLabel": "Nickname",
+        "nicknamePlaceholder": "Enter your nickname",
         "deviceNameLabel": "Device name",
         "deviceNamePlaceholder": "Personal phone",
         "editProfile": "Edit",
@@ -955,6 +1003,7 @@
       },
       "devices": {
         "deviceNameLabel": "Device name",
+        "unknownDevice": "Unknown device, error decrypting name",
         "failed": "Failed to load sessions",
         "removeDevice": "Remove",
         "title": "Devices"
@@ -996,7 +1045,9 @@
         "popsicle": "Popsicle",
         "hulk": "Hulk",
         "autumn": "Autumn",
-        "skyrealm": "SkyRealm"
+        "skyrealm": "SkyRealm",
+        "frost": "Frost",
+        "christmas": "Christmas"
       },
       "title": "Appearance",
       "options": {
@@ -1020,7 +1071,8 @@
         "forceCompactEpisodeViewDescription": "Force the episode carousel in the player to use the \"classic\" compact vertical view. Disabled by default.",
         "homeSectionOrder": "Home section order",
         "homeSectionOrderDescription": "Drag and drop to reorder the watching and bookmarks sections on your homepage. Group order can be editied from the home page.",
-        "forceCompactEpisodeViewLabel": "Compact episodes"
+        "forceCompactEpisodeViewLabel": "Compact episodes",
+        "homeSectionOrderGroups": "Reorder bookmark groups"
       },
       "sections": {
         "watching": "Currently Watching",
@@ -1105,7 +1157,13 @@
       "embedOrderEnableLabel": "Custom embed order",
       "manualSource": "Manual source selection",
       "manualSourceDescription": "Require picking a source before scraping. Disables automatic source selection and opens the source picker when starting playback.",
-      "manualSourceLabel": "Manual source selection"
+      "manualSourceLabel": "Manual source selection",
+      "autoResumeOnPlaybackError": "Auto resume on playback error",
+      "autoResumeOnPlaybackErrorDescription": "Automatically continue searching for other sources when the current source fails during playback. If disabled, you'll see an error screen with a manual resume option.",
+      "autoResumeOnPlaybackErrorLabel": "Auto resume on playback error",
+      "lastSuccessfulSource": "Last used source",
+      "lastSuccessfulSourceDescription": "Automatically prioritize the source that successfully provided content for the previous episode. This helps ensure continuity when watching series.",
+      "lastSuccessfulSourceEnableLabel": "Last used source"
     },
     "reset": "Reset",
     "save": "Save",
@@ -1116,6 +1174,7 @@
         "backendVersion": "Backend version",
         "hostname": "Hostname",
         "insecure": "Insecure",
+        "nickname": "Nickname",
         "notLoggedIn": "You are not logged in",
         "secure": "Secure",
         "title": "App stats",
@@ -1125,15 +1184,17 @@
     },
     "subtitles": {
       "backgroundLabel": "Background opacity",
-      "backgroundBlurLabel": "Background blur",
+      "backgroundBlurEnabledLabel": "Background blur",
+      "backgroundBlurEnabledDescription": "Disabling caption background blur may fix some flickering issues",
+      "backgroundBlurLabel": "Background blur intensity",
       "colorLabel": "Color",
       "previewQuote": "Convinced life is meaningless, I lack the courage of my conviction.",
       "textSizeLabel": "Text size",
       "title": "Subtitles",
       "textBoldLabel": "Bold text",
       "verticalPositionLabel": "Vertical position",
-      "default": "Default",
-      "low": "Low",
+      "high": "High",
+      "low": "Default",
       "textStyle": {
         "title": "Text style",
         "default": "Default",
@@ -1204,7 +1265,7 @@
   "fedapi": {
     "onboarding": {
       "title": "Febbox token",
-      "description": "Bring your own FREE Febbox account to gain access to FED API and CIA API, the best sources with 4K quality, Dolby Atmos, skip intro and the fastest load times! Highly recommended option!"
+      "description": "Bring your own FREE Febbox account to gain access to FED API, the best sources with 4K quality, Dolby Atmos, skip intro and the fastest load times! Highly recommended option!"
     },
     "setup": {
       "title": "To get your UI token:",
@@ -1233,14 +1294,19 @@
       "invalid_token": "Failed to fetch a 'VIP' stream. Your token is invalid!"
     }
   },
-  "realdebrid": {
-    "title": "Real Debrid (Beta)",
-    "description": "Enter your Real Debrid API key to access Real Debrid. Extension required.",
+  "debrid": {
+    "title": "Debrid (Beta)",
+    "description": "Enter your Debrid API key to access Debrid services. Requires a paid <0>Real-Debrid</0> or <1>TorBox</1> account!",
+    "notice": "Notice: This may not work on all browsers, use Chromium for the best compatibility. If you hear no audio, use another source. :(",
     "tokenLabel": "API Key",
+    "serviceOptions": {
+      "realdebrid": "Real Debrid",
+      "torbox": "TorBox"
+    },
     "status": {
-      "failure": "Failed to connect to Real Debrid. Please check your API key.",
-      "api_down": "Real Debrid API is currently unavailable. Please try again later.",
-      "invalid_token": "Invalid API key or non-premium account. Real Debrid requires a premium account."
+      "failure": "Failed to connect to Debrid. Please check your API key.",
+      "api_down": "Hmm, something went wrong. Please try again later.",
+      "invalid_token": "Invalid API key or non-premium account. Debrid requires a premium account."
     }
   },
   "watchParty": {

@@ -15,7 +15,6 @@ import {
   useDiscoverMedia,
   useDiscoverOptions,
 } from "@/pages/discover/hooks/useDiscoverMedia";
-import { useIntersectionObserver } from "@/pages/discover/hooks/useIntersectionObserver";
 import { useDiscoverStore } from "@/stores/discover";
 import { useProgressStore } from "@/stores/progress";
 import { MediaItem } from "@/utils/mediaTypes";
@@ -114,11 +113,6 @@ export function MediaCarousel({
       title: item.title || "",
     }));
 
-  // Set up intersection observer for lazy loading
-  const { targetRef, isIntersecting } = useIntersectionObserver({
-    rootMargin: "300px",
-  });
-
   // Handle provider/genre selection
   const handleProviderChange = React.useCallback((id: string, name: string) => {
     setSelectedProviderId(id);
@@ -196,7 +190,7 @@ export function MediaCarousel({
   ]);
 
   // Fetch media using our hook
-  const { media, sectionTitle } = useDiscoverMedia({
+  const { media, sectionTitle, actualContentType } = useDiscoverMedia({
     contentType,
     mediaType,
     id: selectedProviderId || selectedGenreId || selectedRecommendationId,
@@ -295,7 +289,7 @@ export function MediaCarousel({
     if (showRecommendations && selectedRecommendationId) {
       return `${baseLink}/recommendations/${selectedRecommendationId}/${mediaType}`;
     }
-    return `${baseLink}/${content.type}/${mediaType}`;
+    return `${baseLink}/${actualContentType}/${mediaType}`;
   }, [
     moreLink,
     showProviders,
@@ -305,54 +299,15 @@ export function MediaCarousel({
     showRecommendations,
     selectedRecommendationId,
     mediaType,
-    content.type,
+    actualContentType,
   ]);
 
-  // Loading state
-  if (!isIntersecting || !sectionTitle) {
-    return (
-      <div ref={targetRef as React.RefObject<HTMLDivElement>}>
-        <div className="flex items-center justify-between ml-2 md:ml-8 mt-2">
-          <div className="flex gap-4 items-center">
-            <h2 className="text-2xl cursor-default font-bold text-white md:text-2xl pl-5 text-balance">
-              {t("discover.carousel.title.loading")}
-            </h2>
-          </div>
-        </div>
-        <div className="relative overflow-hidden carousel-container md:pb-4">
-          <div className="grid grid-flow-col auto-cols-max gap-4 pt-0 overflow-x-scroll scrollbar-none rounded-xl overflow-y-hidden md:pl-8 md:pr-8">
-            <div className="md:w-12" />
-            {Array(10)
-              .fill(null)
-              .map((_, index) => (
-                <div
-                  key={`skeleton-loading-${Math.random().toString(36).substring(2)}`}
-                  className="relative mt-4 group cursor-default user-select-none rounded-xl p-2 bg-transparent transition-colors duration-300 w-[10rem] md:w-[11.5rem] h-auto"
-                >
-                  <MediaCard
-                    media={{
-                      id: `skeleton-${index}`,
-                      title: "",
-                      poster: "",
-                      type: isTVShow ? "show" : "movie",
-                    }}
-                    forceSkeleton
-                  />
-                </div>
-              ))}
-            <div className="md:w-12" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div ref={targetRef as React.RefObject<HTMLDivElement>}>
+    <div>
       <div className="flex items-center justify-between ml-2 md:ml-8 mt-2">
-        <div className="flex flex-col">
+        <div className="flex flex-col pl-2 lg:pl-[68px]">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl cursor-default font-bold text-white md:text-2xl pl-5 text-balance">
+            <h2 className="text-2xl cursor-default font-bold text-white md:text-2xl pl-0 text-balance">
               {sectionTitle}
             </h2>
             {showRecommendations &&
@@ -443,7 +398,7 @@ export function MediaCarousel({
             <Link
               to={generatedMoreLink}
               onClick={handleMoreClick}
-              className="flex px-5 items-center hover:text-type-link transition-colors"
+              className="flex items-center hover:text-type-link transition-colors"
             >
               <span className="text-sm">{t("discover.carousel.more")}</span>
               <Icon className="text-sm ml-1" icon={Icons.ARROW_RIGHT} />
@@ -522,7 +477,7 @@ export function MediaCarousel({
           }}
           onWheel={handleWheel}
         >
-          <div className="md:w-12" />
+          <div className="lg:w-12" />
 
           {media.length > 0
             ? media.map((item) => (
@@ -578,7 +533,7 @@ export function MediaCarousel({
             <MoreCard link={generatedMoreLink} />
           )}
 
-          <div className="md:w-12" />
+          <div className="lg:w-12" />
         </div>
 
         {!isMobile && (

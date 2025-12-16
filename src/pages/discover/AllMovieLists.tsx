@@ -19,7 +19,7 @@ import { useDiscoverStore } from "@/stores/discover";
 import { useOverlayStack } from "@/stores/interface/overlayStack";
 import { MediaItem } from "@/utils/mediaTypes";
 
-import { MediaCarousel } from "./components/MediaCarousel";
+import { LazyMediaCarousel } from "./components/LazyMediaCarousel";
 
 export function DiscoverMore() {
   const [curatedLists, setCuratedLists] = useState<CuratedMovieList[]>([]);
@@ -38,13 +38,14 @@ export function DiscoverMore() {
         const lists = await getCuratedMovieLists();
         setCuratedLists(lists);
 
-        // Fetch movie details for each list
+        // Fetch movie details for each list one after another
         const details: { [listSlug: string]: TMDBMovieData[] } = {};
         for (const list of lists) {
           try {
             const movies = await getMovieDetailsForIds(list.tmdbIds, 50);
             if (movies.length > 0) {
               details[list.listSlug] = movies;
+              setMovieDetails({ ...details });
             }
           } catch (error) {
             console.error(
@@ -53,7 +54,6 @@ export function DiscoverMore() {
             );
           }
         }
-        setMovieDetails(details);
       } catch (error) {
         console.error("Failed to fetch curated lists:", error);
       }
@@ -107,21 +107,23 @@ export function DiscoverMore() {
       <WideContainer ultraWide>
         {/* Latest Movies */}
         <div className="relative">
-          <MediaCarousel
+          <LazyMediaCarousel
             content={{ type: "latest", fallback: "nowPlaying" }}
             isTVShow={false}
             carouselRefs={carouselRefs}
             onShowDetails={handleShowDetails}
+            priority // Load immediately as first carousel
           />
         </div>
 
         {/* Top Rated Movies */}
         <div className="relative">
-          <MediaCarousel
+          <LazyMediaCarousel
             content={{ type: "latest4k", fallback: "topRated" }}
             isTVShow={false}
             carouselRefs={carouselRefs}
             onShowDetails={handleShowDetails}
+            priority // Load immediately as second carousel
           />
         </div>
 

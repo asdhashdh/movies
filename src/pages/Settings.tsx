@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAsyncFn, useWindowSize } from "react-use";
+import { useAsyncFn } from "react-use";
 
 import {
   base64ToBuffer,
@@ -17,11 +17,12 @@ import { SearchBarInput } from "@/components/form/SearchBar";
 import { ThinContainer } from "@/components/layout/ThinContainer";
 import { WideContainer } from "@/components/layout/WideContainer";
 import { UserIcons } from "@/components/UserIcon";
+import { Divider } from "@/components/utils/Divider";
 import { Heading1 } from "@/components/utils/Text";
 import { Transition } from "@/components/utils/Transition";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useBackendUrl } from "@/hooks/auth/useBackendUrl";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useIsIOS, useIsMobile, useIsPWA } from "@/hooks/useIsMobile";
 import { useSettingsState } from "@/hooks/useSettingsState";
 import { AccountActionsPart } from "@/pages/parts/settings/AccountActionsPart";
 import { AccountEditPart } from "@/pages/parts/settings/AccountEditPart";
@@ -33,47 +34,43 @@ import { RegisterCalloutPart } from "@/pages/parts/settings/RegisterCalloutPart"
 import { SidebarPart } from "@/pages/parts/settings/SidebarPart";
 import { PageTitle } from "@/pages/parts/util/PageTitle";
 import { AccountWithToken, useAuthStore } from "@/stores/auth";
+import { useBannerSize } from "@/stores/banner";
 import { useLanguageStore } from "@/stores/language";
 import { usePreferencesStore } from "@/stores/preferences";
 import { useSubtitleStore } from "@/stores/subtitles";
 import { usePreviewThemeStore, useThemeStore } from "@/stores/theme";
+import { scrollToElement, scrollToHash } from "@/utils/scroll";
 
 import { SubPageLayout } from "./layouts/SubPageLayout";
+import { AppInfoPart } from "./parts/settings/AppInfoPart";
 import { PreferencesPart } from "./parts/settings/PreferencesPart";
 
 function SettingsLayout(props: {
+  className?: string;
   children: React.ReactNode;
   searchQuery: string;
   onSearchChange: (value: string, force: boolean) => void;
   onSearchUnFocus: (newSearch?: string) => void;
+  selectedCategory: string | null;
+  setSelectedCategory: (category: string | null) => void;
 }) {
+  const { className } = props;
   const { t } = useTranslation();
   const { isMobile } = useIsMobile();
   const searchRef = useRef<HTMLInputElement>(null);
-  const { width: windowWidth, height: windowHeight } = useWindowSize();
+  const bannerSize = useBannerSize();
 
-  // Dynamic offset calculation like HeroPart
-  const topSpacing = 16; // Base spacing
-  const [stickyOffset, setStickyOffset] = useState(topSpacing);
+  const isPWA = useIsPWA();
+  const isIOS = useIsIOS();
+  const isIOSPWA = isIOS && isPWA;
 
-  // Detect if running as a PWA on iOS
-  const isIOSPWA =
-    /iPad|iPhone|iPod/i.test(navigator.userAgent) &&
-    window.matchMedia("(display-mode: standalone)").matches;
-
-  const adjustedTopSpacing = isIOSPWA ? 60 : topSpacing;
-  const isLandscape = windowHeight < windowWidth && isIOSPWA;
-  const adjustedOffset = isLandscape ? -40 : 0;
-
-  useEffect(() => {
-    if (windowWidth > 1280) {
-      // On large screens the bar goes inline with the nav elements
-      setStickyOffset(adjustedTopSpacing);
-    } else {
-      // On smaller screens the bar goes below the nav elements
-      setStickyOffset(adjustedTopSpacing + 60 + adjustedOffset);
-    }
-  }, [adjustedOffset, adjustedTopSpacing, windowWidth]);
+  // Navbar height is 80px (h-20)
+  const navbarHeight = 80;
+  // On desktop: inline with navbar (same top position + 14px adjustment)
+  // On mobile: below navbar (navbar height + banner)
+  const topOffset = isMobile
+    ? navbarHeight + bannerSize + (isIOSPWA ? 34 : 0)
+    : bannerSize + 14;
 
   return (
     <WideContainer ultraWide classNames="overflow-visible">
@@ -81,7 +78,7 @@ function SettingsLayout(props: {
       <div
         className="fixed left-0 right-0 z-50"
         style={{
-          top: `${stickyOffset}px`,
+          top: `${topOffset}px`,
         }}
       >
         <ThinContainer>
@@ -104,8 +101,16 @@ function SettingsLayout(props: {
         )}
         data-settings-content
       >
-        <SidebarPart />
-        <div>{props.children}</div>
+        <SidebarPart
+          selectedCategory={props.selectedCategory}
+          setSelectedCategory={props.setSelectedCategory}
+          searchQuery={props.searchQuery}
+        />
+        <div className={className}>{props.children}</div>
+        <div className="block lg:hidden">
+          <Divider />
+          <AppInfoPart />
+        </div>
       </div>
     </WideContainer>
   );
@@ -115,6 +120,8 @@ export function AccountSettings(props: {
   account: AccountWithToken;
   deviceName: string;
   setDeviceName: (s: string) => void;
+  nickname: string;
+  setNickname: (s: string) => void;
   colorA: string;
   setColorA: (s: string) => void;
   colorB: string;
@@ -137,6 +144,8 @@ export function AccountSettings(props: {
       <AccountEditPart
         deviceName={props.deviceName}
         setDeviceName={props.setDeviceName}
+        nickname={props.nickname}
+        setNickname={props.setNickname}
         colorA={props.colorA}
         setColorA={props.setColorA}
         colorB={props.colorB}
@@ -157,16 +166,121 @@ export function AccountSettings(props: {
 
 export function SettingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const prevCategoryRef = useRef<string | null>(null);
 
   useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
-      const element = document.querySelector(hash);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+      const hashId = hash.substring(1); // Remove the # symbol
+      // Check if it's a valid settings category
+      const validCategories = [
+        "settings-account",
+        "settings-preferences",
+        "settings-appearance",
+        "settings-captions",
+        "settings-connection",
+      ];
+
+      // Map sub-section hashes to their parent categories
+      const subSectionToCategory: Record<string, string> = {
+        "source-order": "settings-preferences",
+      };
+
+      // Check if it's a sub-section hash
+      if (subSectionToCategory[hashId]) {
+        const categoryId = subSectionToCategory[hashId];
+        setSelectedCategory(categoryId);
+        // Wait for the section to render, then scroll
+        scrollToHash(hash, { delay: 100 });
+      } else if (validCategories.includes(hashId)) {
+        // It's a category hash
+        setSelectedCategory(hashId);
+        scrollToHash(hash);
+      } else {
+        // Try to find the element anyway (might be a sub-section)
+        const element = document.querySelector(hash);
+        if (element) {
+          // Find which category this element belongs to
+          const parentSection = element.closest('[id^="settings-"]');
+          if (parentSection) {
+            const categoryId = parentSection.id;
+            if (validCategories.includes(categoryId)) {
+              setSelectedCategory(categoryId);
+              scrollToHash(hash, { delay: 100 });
+            }
+          } else {
+            scrollToHash(hash);
+          }
+        }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Handle hash changes after initial load
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const hashId = hash.substring(1);
+        const validCategories = [
+          "settings-account",
+          "settings-preferences",
+          "settings-appearance",
+          "settings-captions",
+          "settings-connection",
+        ];
+        const subSectionToCategory: Record<string, string> = {
+          "source-order": "settings-preferences",
+        };
+
+        if (subSectionToCategory[hashId]) {
+          const categoryId = subSectionToCategory[hashId];
+          setSelectedCategory(categoryId);
+          scrollToHash(hash, { delay: 100 });
+        } else if (validCategories.includes(hashId)) {
+          setSelectedCategory(hashId);
+          scrollToHash(hash, { delay: 100 });
+        } else {
+          const element = document.querySelector(hash);
+          if (element) {
+            const parentSection = element.closest('[id^="settings-"]');
+            if (parentSection) {
+              const categoryId = parentSection.id;
+              if (validCategories.includes(categoryId)) {
+                setSelectedCategory(categoryId);
+                scrollToHash(hash, { delay: 100 });
+              }
+            } else {
+              scrollToHash(hash);
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
+  // Scroll to top when category changes (but not on initial load or when searching)
+  useEffect(() => {
+    if (
+      prevCategoryRef.current !== null &&
+      prevCategoryRef.current !== selectedCategory &&
+      !searchQuery.trim()
+    ) {
+      // Only scroll to top if we're actually switching categories (not initial load)
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+    prevCategoryRef.current = selectedCategory;
+  }, [selectedCategory, searchQuery]);
 
   const { t } = useTranslation();
   const activeTheme = useThemeStore((s) => s.theme);
@@ -177,6 +291,10 @@ export function SettingsPage() {
   // Simple text search with highlighting
   const handleSearchChange = useCallback((value: string, _force: boolean) => {
     setSearchQuery(value);
+    // When searching, clear category selection to show all sections
+    if (value.trim()) {
+      setSelectedCategory(null);
+    }
 
     // Remove existing highlights
     const existingHighlights = document.querySelectorAll(".search-highlight");
@@ -229,13 +347,10 @@ export function SettingsPage() {
       }
 
       // Scroll to first highlighted element
-      const firstHighlighted = document.querySelector(".search-highlight");
-      if (firstHighlighted) {
-        firstHighlighted.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
+      scrollToElement(".search-highlight", {
+        behavior: "smooth",
+        block: "center",
+      });
     }
   }, []);
 
@@ -260,8 +375,10 @@ export function SettingsPage() {
   const febboxKey = usePreferencesStore((s) => s.febboxKey);
   const setFebboxKey = usePreferencesStore((s) => s.setFebboxKey);
 
-  const realDebridKey = usePreferencesStore((s) => s.realDebridKey);
-  const setRealDebridKey = usePreferencesStore((s) => s.setRealDebridKey);
+  const debridToken = usePreferencesStore((s) => s.debridToken);
+  const setdebridToken = usePreferencesStore((s) => s.setdebridToken);
+  const debridService = usePreferencesStore((s) => s.debridService);
+  const setdebridService = usePreferencesStore((s) => s.setdebridService);
 
   const enableThumbnails = usePreferencesStore((s) => s.enableThumbnails);
   const setEnableThumbnails = usePreferencesStore((s) => s.setEnableThumbnails);
@@ -280,6 +397,20 @@ export function SettingsPage() {
   const enableSourceOrder = usePreferencesStore((s) => s.enableSourceOrder);
   const setEnableSourceOrder = usePreferencesStore(
     (s) => s.setEnableSourceOrder,
+  );
+
+  const lastSuccessfulSource = usePreferencesStore(
+    (s) => s.lastSuccessfulSource,
+  );
+  const setLastSuccessfulSource = usePreferencesStore(
+    (s) => s.setLastSuccessfulSource,
+  );
+
+  const enableLastSuccessfulSource = usePreferencesStore(
+    (s) => s.enableLastSuccessfulSource,
+  );
+  const setEnableLastSuccessfulSource = usePreferencesStore(
+    (s) => s.setEnableLastSuccessfulSource,
   );
 
   const disabledSources = usePreferencesStore((s) => s.disabledSources);
@@ -361,13 +492,27 @@ export function SettingsPage() {
     (s) => s.setEnableDoubleClickToSeek,
   );
 
+  const enableAutoResumeOnPlaybackError = usePreferencesStore(
+    (s) => s.enableAutoResumeOnPlaybackError,
+  );
+  const setEnableAutoResumeOnPlaybackError = usePreferencesStore(
+    (s) => s.setEnableAutoResumeOnPlaybackError,
+  );
+
   const account = useAuthStore((s) => s.account);
   const updateProfile = useAuthStore((s) => s.setAccountProfile);
   const updateDeviceName = useAuthStore((s) => s.updateDeviceName);
+  const updateNickname = useAuthStore((s) => s.setAccountNickname);
   const decryptedName = useMemo(() => {
     if (!account) return "";
-    return decryptData(account.deviceName, base64ToBuffer(account.seed));
-  }, [account]);
+    try {
+      return decryptData(account.deviceName, base64ToBuffer(account.seed));
+    } catch (error) {
+      console.warn("Failed to decrypt device name, using fallback:", error);
+      // Return a fallback device name if decryption fails
+      return t("settings.account.devices.unknownDevice");
+    }
+  }, [account, t]);
 
   const backendUrl = useBackendUrl();
 
@@ -381,23 +526,25 @@ export function SettingsPage() {
         if (settings.febboxKey) {
           setFebboxKey(settings.febboxKey);
         }
-        if (settings.realDebridKey) {
-          setRealDebridKey(settings.realDebridKey);
+        if (settings.debridToken) {
+          setdebridToken(settings.debridToken);
         }
       }
     };
     loadSettings();
-  }, [account, backendUrl, setFebboxKey, setRealDebridKey]);
+  }, [account, backendUrl, setFebboxKey, setdebridToken, setdebridService]);
 
   const state = useSettingsState(
     activeTheme,
     appLanguage,
     subStyling,
     decryptedName,
+    account?.nickname || "",
     proxySet,
     backendUrlSetting,
     febboxKey,
-    realDebridKey,
+    debridToken,
+    debridService,
     account ? account.profile : undefined,
     enableThumbnails,
     enableAutoplay,
@@ -406,6 +553,8 @@ export function SettingsPage() {
     enableDetailsModal,
     sourceOrder,
     enableSourceOrder,
+    lastSuccessfulSource,
+    enableLastSuccessfulSource,
     disabledSources,
     embedOrder,
     enableEmbedOrder,
@@ -421,12 +570,13 @@ export function SettingsPage() {
     homeSectionOrder,
     manualSourceSelection,
     enableDoubleClickToSeek,
+    enableAutoResumeOnPlaybackError,
   );
 
   const availableSources = useMemo(() => {
     const sources = getAllProviders().listSources();
     const sourceIDs = sources.map((s) => s.id);
-    const stateSources = state.sourceOrder.state;
+    const stateSources = state.sourceOrder.state || [];
 
     // Filter out sources that are not in `stateSources` and are in `sources`
     const updatedSources = stateSources.filter((ss) => sourceIDs.includes(ss));
@@ -465,7 +615,8 @@ export function SettingsPage() {
         state.theme.changed ||
         state.proxyUrls.changed ||
         state.febboxKey.changed ||
-        state.realDebridKey.changed ||
+        state.debridToken.changed ||
+        state.debridService.changed ||
         state.enableThumbnails.changed ||
         state.enableAutoplay.changed ||
         state.enableSkipCredits.changed ||
@@ -475,6 +626,8 @@ export function SettingsPage() {
         state.enableImageLogos.changed ||
         state.sourceOrder.changed ||
         state.enableSourceOrder.changed ||
+        state.lastSuccessfulSource.changed ||
+        state.enableLastSuccessfulSource.changed ||
         state.disabledSources.changed ||
         state.proxyTmdb.changed ||
         state.enableCarouselView.changed ||
@@ -483,14 +636,16 @@ export function SettingsPage() {
         state.enableHoldToBoost.changed ||
         state.homeSectionOrder.changed ||
         state.manualSourceSelection.changed ||
-        state.enableDoubleClickToSeek
+        state.enableDoubleClickToSeek.changed ||
+        state.enableAutoResumeOnPlaybackError
       ) {
         await updateSettings(backendUrl, account, {
           applicationLanguage: state.appLanguage.state,
           applicationTheme: state.theme.state,
           proxyUrls: state.proxyUrls.state?.filter((v) => v !== "") ?? null,
           febboxKey: state.febboxKey.state,
-          realDebridKey: state.realDebridKey.state,
+          debridToken: state.debridToken.state,
+          debridService: state.debridService.state,
           enableThumbnails: state.enableThumbnails.state,
           enableAutoplay: state.enableAutoplay.state,
           enableSkipCredits: state.enableSkipCredits.state,
@@ -500,6 +655,8 @@ export function SettingsPage() {
           enableImageLogos: state.enableImageLogos.state,
           sourceOrder: state.sourceOrder.state,
           enableSourceOrder: state.enableSourceOrder.state,
+          lastSuccessfulSource: state.lastSuccessfulSource.state,
+          enableLastSuccessfulSource: state.enableLastSuccessfulSource.state,
           disabledSources: state.disabledSources.state,
           proxyTmdb: state.proxyTmdb.state,
           enableCarouselView: state.enableCarouselView.state,
@@ -509,6 +666,8 @@ export function SettingsPage() {
           homeSectionOrder: state.homeSectionOrder.state,
           manualSourceSelection: state.manualSourceSelection.state,
           enableDoubleClickToSeek: state.enableDoubleClickToSeek.state,
+          enableAutoResumeOnPlaybackError:
+            state.enableAutoResumeOnPlaybackError.state,
         });
       }
       if (state.deviceName.changed) {
@@ -521,10 +680,17 @@ export function SettingsPage() {
         });
         updateDeviceName(newDeviceName);
       }
-      if (state.profile.changed) {
+      if (state.nickname.changed) {
+        await editUser(backendUrl, account, {
+          nickname: state.nickname.state,
+        });
+        updateNickname(state.nickname.state);
+      }
+      if (state.profile.changed && state.profile.state) {
         await editUser(backendUrl, account, {
           profile: state.profile.state,
         });
+        updateProfile(state.profile.state);
       }
     }
 
@@ -537,6 +703,8 @@ export function SettingsPage() {
     setEnableImageLogos(state.enableImageLogos.state);
     setSourceOrder(state.sourceOrder.state);
     setEnableSourceOrder(state.enableSourceOrder.state);
+    setLastSuccessfulSource(state.lastSuccessfulSource.state);
+    setEnableLastSuccessfulSource(state.enableLastSuccessfulSource.state);
     setDisabledSources(state.disabledSources.state);
     setAppLanguage(state.appLanguage.state);
     setTheme(state.theme.state);
@@ -544,7 +712,8 @@ export function SettingsPage() {
     setProxySet(state.proxyUrls.state?.filter((v) => v !== "") ?? null);
     setEnableSourceOrder(state.enableSourceOrder.state);
     setFebboxKey(state.febboxKey.state);
-    setRealDebridKey(state.realDebridKey.state);
+    setdebridToken(state.debridToken.state);
+    setdebridService(state.debridService.state);
     setProxyTmdb(state.proxyTmdb.state);
     setEnableCarouselView(state.enableCarouselView.state);
     setForceCompactEpisodeView(state.forceCompactEpisodeView.state);
@@ -553,6 +722,9 @@ export function SettingsPage() {
     setHomeSectionOrder(state.homeSectionOrder.state);
     setManualSourceSelection(state.manualSourceSelection.state);
     setEnableDoubleClickToSeek(state.enableDoubleClickToSeek.state);
+    setEnableAutoResumeOnPlaybackError(
+      state.enableAutoResumeOnPlaybackError.state,
+    );
 
     if (state.profile.state) {
       updateProfile(state.profile.state);
@@ -574,7 +746,8 @@ export function SettingsPage() {
     backendUrl,
     setEnableThumbnails,
     setFebboxKey,
-    setRealDebridKey,
+    setdebridToken,
+    setdebridService,
     state,
     setEnableAutoplay,
     setEnableSkipCredits,
@@ -584,6 +757,8 @@ export function SettingsPage() {
     setEnableImageLogos,
     setSourceOrder,
     setEnableSourceOrder,
+    setLastSuccessfulSource,
+    setEnableLastSuccessfulSource,
     setDisabledSources,
     setAppLanguage,
     setTheme,
@@ -591,6 +766,7 @@ export function SettingsPage() {
     setProxySet,
     updateDeviceName,
     updateProfile,
+    updateNickname,
     logout,
     setBackendUrl,
     setProxyTmdb,
@@ -601,6 +777,7 @@ export function SettingsPage() {
     setHomeSectionOrder,
     setManualSourceSelection,
     setEnableDoubleClickToSeek,
+    setEnableAutoResumeOnPlaybackError,
   ]);
   return (
     <SubPageLayout>
@@ -609,101 +786,144 @@ export function SettingsPage() {
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         onSearchUnFocus={handleSearchUnFocus}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        className="space-y-28"
       >
-        <div id="settings-account">
-          <Heading1 border className="!mb-0">
-            {t("settings.account.title")}
-          </Heading1>
-          {user.account && state.profile.state ? (
-            <AccountSettings
-              account={user.account}
-              deviceName={state.deviceName.state}
-              setDeviceName={state.deviceName.set}
-              colorA={state.profile.state.colorA}
-              setColorA={(v) => {
-                state.profile.set((s) => (s ? { ...s, colorA: v } : undefined));
-              }}
-              colorB={state.profile.state.colorB}
-              setColorB={(v) =>
-                state.profile.set((s) => (s ? { ...s, colorB: v } : undefined))
+        {(searchQuery.trim() ||
+          !selectedCategory ||
+          selectedCategory === "settings-account") && (
+          <div id="settings-account">
+            <Heading1 border className="!mb-0">
+              {t("settings.account.title")}
+            </Heading1>
+            {user.account && state.profile.state ? (
+              <AccountSettings
+                account={user.account}
+                deviceName={state.deviceName.state}
+                setDeviceName={state.deviceName.set}
+                nickname={state.nickname.state}
+                setNickname={state.nickname.set}
+                colorA={state.profile.state.colorA}
+                setColorA={(v) => {
+                  state.profile.set((s) =>
+                    s ? { ...s, colorA: v } : undefined,
+                  );
+                }}
+                colorB={state.profile.state.colorB}
+                setColorB={(v) =>
+                  state.profile.set((s) =>
+                    s ? { ...s, colorB: v } : undefined,
+                  )
+                }
+                userIcon={state.profile.state.icon as any}
+                setUserIcon={(v) =>
+                  state.profile.set((s) => (s ? { ...s, icon: v } : undefined))
+                }
+              />
+            ) : (
+              <RegisterCalloutPart />
+            )}
+          </div>
+        )}
+        {(searchQuery.trim() ||
+          !selectedCategory ||
+          selectedCategory === "settings-preferences") && (
+          <div id="settings-preferences">
+            <PreferencesPart
+              language={state.appLanguage.state}
+              setLanguage={state.appLanguage.set}
+              enableThumbnails={state.enableThumbnails.state}
+              setEnableThumbnails={state.enableThumbnails.set}
+              enableAutoplay={state.enableAutoplay.state}
+              setEnableAutoplay={state.enableAutoplay.set}
+              enableSkipCredits={state.enableSkipCredits.state}
+              setEnableSkipCredits={state.enableSkipCredits.set}
+              sourceOrder={availableSources}
+              setSourceOrder={state.sourceOrder.set}
+              enableSourceOrder={state.enableSourceOrder.state}
+              setenableSourceOrder={state.enableSourceOrder.set}
+              enableLastSuccessfulSource={
+                state.enableLastSuccessfulSource.state
               }
-              userIcon={state.profile.state.icon as any}
-              setUserIcon={(v) =>
-                state.profile.set((s) => (s ? { ...s, icon: v } : undefined))
+              setEnableLastSuccessfulSource={
+                state.enableLastSuccessfulSource.set
+              }
+              disabledSources={state.disabledSources.state}
+              setDisabledSources={state.disabledSources.set}
+              enableLowPerformanceMode={state.enableLowPerformanceMode.state}
+              setEnableLowPerformanceMode={state.enableLowPerformanceMode.set}
+              enableHoldToBoost={state.enableHoldToBoost.state}
+              setEnableHoldToBoost={state.enableHoldToBoost.set}
+              manualSourceSelection={state.manualSourceSelection.state}
+              setManualSourceSelection={state.manualSourceSelection.set}
+              enableDoubleClickToSeek={state.enableDoubleClickToSeek.state}
+              setEnableDoubleClickToSeek={state.enableDoubleClickToSeek.set}
+              enableAutoResumeOnPlaybackError={
+                state.enableAutoResumeOnPlaybackError.state
+              }
+              setEnableAutoResumeOnPlaybackError={
+                state.enableAutoResumeOnPlaybackError.set
               }
             />
-          ) : (
-            <RegisterCalloutPart />
-          )}
-        </div>
-        <div id="settings-preferences" className="mt-28">
-          <PreferencesPart
-            language={state.appLanguage.state}
-            setLanguage={state.appLanguage.set}
-            enableThumbnails={state.enableThumbnails.state}
-            setEnableThumbnails={state.enableThumbnails.set}
-            enableAutoplay={state.enableAutoplay.state}
-            setEnableAutoplay={state.enableAutoplay.set}
-            enableSkipCredits={state.enableSkipCredits.state}
-            setEnableSkipCredits={state.enableSkipCredits.set}
-            sourceOrder={availableSources}
-            setSourceOrder={state.sourceOrder.set}
-            enableSourceOrder={state.enableSourceOrder.state}
-            setenableSourceOrder={state.enableSourceOrder.set}
-            disabledSources={state.disabledSources.state}
-            setDisabledSources={state.disabledSources.set}
-            enableLowPerformanceMode={state.enableLowPerformanceMode.state}
-            setEnableLowPerformanceMode={state.enableLowPerformanceMode.set}
-            enableHoldToBoost={state.enableHoldToBoost.state}
-            setEnableHoldToBoost={state.enableHoldToBoost.set}
-            manualSourceSelection={state.manualSourceSelection.state}
-            setManualSourceSelection={state.manualSourceSelection.set}
-            enableDoubleClickToSeek={state.enableDoubleClickToSeek.state}
-            setEnableDoubleClickToSeek={state.enableDoubleClickToSeek.set}
-          />
-        </div>
-        <div id="settings-appearance" className="mt-28">
-          <AppearancePart
-            active={previewTheme ?? "default"}
-            inUse={activeTheme ?? "default"}
-            setTheme={setThemeWithPreview}
-            enableDiscover={state.enableDiscover.state}
-            setEnableDiscover={state.enableDiscover.set}
-            enableFeatured={state.enableFeatured.state}
-            setEnableFeatured={state.enableFeatured.set}
-            enableDetailsModal={state.enableDetailsModal.state}
-            setEnableDetailsModal={state.enableDetailsModal.set}
-            enableImageLogos={state.enableImageLogos.state}
-            setEnableImageLogos={state.enableImageLogos.set}
-            enableCarouselView={state.enableCarouselView.state}
-            setEnableCarouselView={state.enableCarouselView.set}
-            forceCompactEpisodeView={state.forceCompactEpisodeView.state}
-            setForceCompactEpisodeView={state.forceCompactEpisodeView.set}
-            homeSectionOrder={state.homeSectionOrder.state}
-            setHomeSectionOrder={state.homeSectionOrder.set}
-            enableLowPerformanceMode={state.enableLowPerformanceMode.state}
-          />
-        </div>
-        <div id="settings-captions" className="mt-28">
-          <CaptionsPart
-            styling={state.subtitleStyling.state}
-            setStyling={state.subtitleStyling.set}
-          />
-        </div>
-        <div id="settings-connection" className="mt-28">
-          <ConnectionsPart
-            backendUrl={state.backendUrl.state}
-            setBackendUrl={state.backendUrl.set}
-            proxyUrls={state.proxyUrls.state}
-            setProxyUrls={state.proxyUrls.set}
-            febboxKey={state.febboxKey.state}
-            setFebboxKey={state.febboxKey.set}
-            realDebridKey={state.realDebridKey.state}
-            setRealDebridKey={state.realDebridKey.set}
-            proxyTmdb={state.proxyTmdb.state}
-            setProxyTmdb={state.proxyTmdb.set}
-          />
-        </div>
+          </div>
+        )}
+        {(searchQuery.trim() ||
+          !selectedCategory ||
+          selectedCategory === "settings-appearance") && (
+          <div id="settings-appearance">
+            <AppearancePart
+              active={previewTheme ?? "default"}
+              inUse={activeTheme ?? "default"}
+              setTheme={setThemeWithPreview}
+              enableDiscover={state.enableDiscover.state}
+              setEnableDiscover={state.enableDiscover.set}
+              enableFeatured={state.enableFeatured.state}
+              setEnableFeatured={state.enableFeatured.set}
+              enableDetailsModal={state.enableDetailsModal.state}
+              setEnableDetailsModal={state.enableDetailsModal.set}
+              enableImageLogos={state.enableImageLogos.state}
+              setEnableImageLogos={state.enableImageLogos.set}
+              enableCarouselView={state.enableCarouselView.state}
+              setEnableCarouselView={state.enableCarouselView.set}
+              forceCompactEpisodeView={state.forceCompactEpisodeView.state}
+              setForceCompactEpisodeView={state.forceCompactEpisodeView.set}
+              homeSectionOrder={state.homeSectionOrder.state}
+              setHomeSectionOrder={state.homeSectionOrder.set}
+              enableLowPerformanceMode={state.enableLowPerformanceMode.state}
+            />
+          </div>
+        )}
+        {(searchQuery.trim() ||
+          !selectedCategory ||
+          selectedCategory === "settings-captions") && (
+          <div id="settings-captions">
+            <CaptionsPart
+              styling={state.subtitleStyling.state}
+              setStyling={state.subtitleStyling.set}
+            />
+          </div>
+        )}
+        {(searchQuery.trim() ||
+          !selectedCategory ||
+          selectedCategory === "settings-connection") && (
+          <div id="settings-connection">
+            <ConnectionsPart
+              backendUrl={state.backendUrl.state}
+              setBackendUrl={state.backendUrl.set}
+              proxyUrls={state.proxyUrls.state}
+              setProxyUrls={state.proxyUrls.set}
+              febboxKey={state.febboxKey.state}
+              setFebboxKey={state.febboxKey.set}
+              debridToken={state.debridToken.state}
+              setdebridToken={state.debridToken.set}
+              debridService={state.debridService.state}
+              setdebridService={state.debridService.set}
+              proxyTmdb={state.proxyTmdb.state}
+              setProxyTmdb={state.proxyTmdb.set}
+            />
+          </div>
+        )}
       </SettingsLayout>
       <Transition
         animation="fade"

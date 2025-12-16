@@ -9,7 +9,8 @@ export interface SettingsInput {
   defaultSubtitleLanguage?: string;
   proxyUrls?: string[] | null;
   febboxKey?: string | null;
-  realDebridKey?: string | null;
+  debridToken?: string | null;
+  debridService?: string;
   enableThumbnails?: boolean;
   enableAutoplay?: boolean;
   enableSkipCredits?: boolean;
@@ -21,6 +22,8 @@ export interface SettingsInput {
   forceCompactEpisodeView?: boolean;
   sourceOrder?: string[] | null;
   enableSourceOrder?: boolean;
+  lastSuccessfulSource?: string | null;
+  enableLastSuccessfulSource?: boolean;
   disabledSources?: string[] | null;
   embedOrder?: string[] | null;
   enableEmbedOrder?: boolean;
@@ -32,6 +35,7 @@ export interface SettingsInput {
   homeSectionOrder?: string[] | null;
   manualSourceSelection?: boolean;
   enableDoubleClickToSeek?: boolean;
+  enableAutoResumeOnPlaybackError?: boolean;
 }
 
 export interface SettingsResponse {
@@ -40,7 +44,8 @@ export interface SettingsResponse {
   defaultSubtitleLanguage?: string | null;
   proxyUrls?: string[] | null;
   febboxKey?: string | null;
-  realDebridKey?: string | null;
+  debridToken?: string | null;
+  debridService?: string;
   enableThumbnails?: boolean;
   enableAutoplay?: boolean;
   enableSkipCredits?: boolean;
@@ -52,6 +57,8 @@ export interface SettingsResponse {
   forceCompactEpisodeView?: boolean;
   sourceOrder?: string[] | null;
   enableSourceOrder?: boolean;
+  lastSuccessfulSource?: string | null;
+  enableLastSuccessfulSource?: boolean;
   disabledSources?: string[] | null;
   embedOrder?: string[] | null;
   enableEmbedOrder?: boolean;
@@ -63,6 +70,7 @@ export interface SettingsResponse {
   homeSectionOrder?: string[] | null;
   manualSourceSelection?: boolean;
   enableDoubleClickToSeek?: boolean;
+  enableAutoResumeOnPlaybackError?: boolean;
 }
 
 export function updateSettings(

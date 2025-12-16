@@ -26,12 +26,16 @@ interface Config {
   ONBOARDING_PROXY_INSTALL_LINK: string;
   ALLOW_AUTOPLAY: boolean;
   ALLOW_FEBBOX_KEY: boolean;
-  ALLOW_REAL_DEBRID_KEY: boolean;
+  ALLOW_DEBRID_KEY: boolean;
   SHOW_AD: boolean;
-  AD_CONTENT_URL: string; // like <script src="https://umami.com/script.js"></script>
-  TRACK_SCRIPT: string;
+  AD_CONTENT_URL: string;
+  TRACK_SCRIPT: string; // like <script src="https://umami.com/script.js"></script>
   BANNER_MESSAGE: string;
   BANNER_ID: string;
+  USE_TRAKT: boolean;
+  HIDE_PROXY_ONBOARDING: boolean;
+  SHOW_SUPPORT_BAR: boolean;
+  SUPPORT_BAR_VALUE: string;
 }
 
 export interface RuntimeConfig {
@@ -41,7 +45,7 @@ export interface RuntimeConfig {
   DMCA_EMAIL: string | null;
   TWITTER_LINK: string;
   TMDB_READ_API_KEY: string | null;
-  ALLOW_REAL_DEBRID_KEY: boolean;
+  ALLOW_DEBRID_KEY: boolean;
   NORMAL_ROUTER: boolean;
   PROXY_URLS: string[];
   M3U8_PROXY_URLS: string[];
@@ -60,6 +64,10 @@ export interface RuntimeConfig {
   TRACK_SCRIPT: string | null;
   BANNER_MESSAGE: string | null;
   BANNER_ID: string | null;
+  USE_TRAKT: boolean;
+  HIDE_PROXY_ONBOARDING: boolean;
+  SHOW_SUPPORT_BAR: boolean;
+  SUPPORT_BAR_VALUE: string;
 }
 
 const env: Record<keyof Config, undefined | string> = {
@@ -85,12 +93,16 @@ const env: Record<keyof Config, undefined | string> = {
   HAS_ONBOARDING: import.meta.env.VITE_HAS_ONBOARDING,
   ALLOW_AUTOPLAY: import.meta.env.VITE_ALLOW_AUTOPLAY,
   ALLOW_FEBBOX_KEY: import.meta.env.VITE_ALLOW_FEBBOX_KEY,
-  ALLOW_REAL_DEBRID_KEY: import.meta.env.VITE_ALLOW_REAL_DEBRID_KEY,
+  ALLOW_DEBRID_KEY: import.meta.env.VITE_ALLOW_DEBRID_KEY,
   SHOW_AD: import.meta.env.VITE_SHOW_AD,
   AD_CONTENT_URL: import.meta.env.VITE_AD_CONTENT_URL,
   TRACK_SCRIPT: import.meta.env.VITE_TRACK_SCRIPT,
   BANNER_MESSAGE: import.meta.env.VITE_BANNER_MESSAGE,
   BANNER_ID: import.meta.env.VITE_BANNER_ID,
+  USE_TRAKT: import.meta.env.VITE_USE_TRAKT,
+  HIDE_PROXY_ONBOARDING: import.meta.env.VITE_HIDE_PROXY_ONBOARDING,
+  SHOW_SUPPORT_BAR: import.meta.env.VITE_SHOW_SUPPORT_BAR,
+  SUPPORT_BAR_VALUE: import.meta.env.VITE_SUPPORT_BAR_VALUE,
 };
 
 function coerceUndefined(value: string | null | undefined): string | undefined {
@@ -156,7 +168,7 @@ export function conf(): RuntimeConfig {
       )
       .filter((v) => v.length === 2), // The format is <beforeA>:<afterA>,<beforeB>:<afterB>
     ALLOW_FEBBOX_KEY: getKey("ALLOW_FEBBOX_KEY", "false") === "true",
-    ALLOW_REAL_DEBRID_KEY: getKey("ALLOW_REAL_DEBRID_KEY", "false") === "true",
+    ALLOW_DEBRID_KEY: getKey("ALLOW_DEBRID_KEY", "false") === "true",
     SHOW_AD: getKey("SHOW_AD", "false") === "true",
     AD_CONTENT_URL: getKey("AD_CONTENT_URL", "")
       .split(",")
@@ -165,5 +177,9 @@ export function conf(): RuntimeConfig {
     TRACK_SCRIPT: getKey("TRACK_SCRIPT"),
     BANNER_MESSAGE: getKey("BANNER_MESSAGE"),
     BANNER_ID: getKey("BANNER_ID"),
+    USE_TRAKT: getKey("USE_TRAKT", "false") === "true",
+    HIDE_PROXY_ONBOARDING: getKey("HIDE_PROXY_ONBOARDING", "false") === "true",
+    SHOW_SUPPORT_BAR: getKey("SHOW_SUPPORT_BAR", "false") === "true",
+    SUPPORT_BAR_VALUE: getKey("SUPPORT_BAR_VALUE") ?? "",
   };
 }

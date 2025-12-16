@@ -10,6 +10,7 @@ import {
 } from "@/backend/helpers/providerApi";
 import { getLoadbalancedProviderApiUrl } from "@/backend/providers/fetchers";
 import { getProviders } from "@/backend/providers/providers";
+import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
 
 export interface ScrapingItems {
@@ -155,21 +156,82 @@ export function useScrape() {
 
   const preferredSourceOrder = usePreferencesStore((s) => s.sourceOrder);
   const enableSourceOrder = usePreferencesStore((s) => s.enableSourceOrder);
+  const lastSuccessfulSource = usePreferencesStore(
+    (s) => s.lastSuccessfulSource,
+  );
+  const enableLastSuccessfulSource = usePreferencesStore(
+    (s) => s.enableLastSuccessfulSource,
+  );
   const disabledSources = usePreferencesStore((s) => s.disabledSources);
   const preferredEmbedOrder = usePreferencesStore((s) => s.embedOrder);
   const enableEmbedOrder = usePreferencesStore((s) => s.enableEmbedOrder);
   const disabledEmbeds = usePreferencesStore((s) => s.disabledEmbeds);
 
   const startScraping = useCallback(
-    async (media: ScrapeMedia) => {
-      // Filter out disabled sources from the source order
-      const filteredSourceOrder = enableSourceOrder
-        ? preferredSourceOrder.filter((id) => !disabledSources.includes(id))
-        : undefined;
+    async (media: ScrapeMedia, startFromSourceId?: string) => {
+      const providerInstance = getProviders();
+      const allSources = providerInstance.listSources();
+      const playerState = usePlayerStore.getState();
+      const failedSources = playerState.failedSources;
+      const failedEmbeds = playerState.failedEmbeds;
 
-      // Filter out disabled embeds from the embed order
+      // Start with all available sources (filtered by disabled and failed ones)
+      let baseSourceOrder = allSources
+        .filter(
+          (source) =>
+            !(disabledSources || []).includes(source.id) &&
+            !failedSources.includes(source.id),
+        )
+        .map((source) => source.id);
+
+      // Apply custom source ordering if enabled
+      if (enableSourceOrder && (preferredSourceOrder || []).length > 0) {
+        const orderedSources: string[] = [];
+        const remainingSources = [...baseSourceOrder];
+
+        // Add sources in preferred order
+        for (const sourceId of preferredSourceOrder) {
+          const sourceIndex = remainingSources.indexOf(sourceId);
+          if (sourceIndex !== -1) {
+            orderedSources.push(sourceId);
+            remainingSources.splice(sourceIndex, 1);
+          }
+        }
+
+        // Add remaining sources
+        baseSourceOrder = [...orderedSources, ...remainingSources];
+      }
+
+      // If we have a last successful source and the feature is enabled, prioritize it
+      if (enableLastSuccessfulSource && lastSuccessfulSource) {
+        const lastSourceIndex = baseSourceOrder.indexOf(lastSuccessfulSource);
+        if (lastSourceIndex !== -1) {
+          baseSourceOrder = [
+            lastSuccessfulSource,
+            ...baseSourceOrder.filter((id) => id !== lastSuccessfulSource),
+          ];
+        }
+      }
+
+      // If starting from a specific source ID, filter the order to start AFTER that source
+      let filteredSourceOrder = baseSourceOrder;
+      if (startFromSourceId) {
+        const startIndex = filteredSourceOrder.indexOf(startFromSourceId);
+        if (startIndex !== -1) {
+          filteredSourceOrder = filteredSourceOrder.slice(startIndex + 1);
+        }
+      }
+
+      // Collect all failed embed IDs across all sources
+      const allFailedEmbedIds = Object.values(failedEmbeds).flat();
+
+      // Filter out disabled and failed embeds from the embed order
       const filteredEmbedOrder = enableEmbedOrder
-        ? preferredEmbedOrder.filter((id) => !disabledEmbeds.includes(id))
+        ? (preferredEmbedOrder || []).filter(
+            (id) =>
+              !(disabledEmbeds || []).includes(id) &&
+              !allFailedEmbedIds.includes(id),
+          )
         : undefined;
 
       const providerApiUrl = getLoadbalancedProviderApiUrl();
@@ -199,9 +261,7 @@ export function useScrape() {
       const providers = getProviders();
       const output = await providers.runAll({
         media,
-        // Only pass sourceOrder if enableSourceOrder is true, and filter out disabled sources
         sourceOrder: filteredSourceOrder,
-        // Only pass embedOrder if enableEmbedOrder is true
         embedOrder: filteredEmbedOrder,
         events: {
           init: initEvent,
@@ -223,6 +283,8 @@ export function useScrape() {
       startScrape,
       preferredSourceOrder,
       enableSourceOrder,
+      lastSuccessfulSource,
+      enableLastSuccessfulSource,
       disabledSources,
       preferredEmbedOrder,
       enableEmbedOrder,
@@ -230,8 +292,16 @@ export function useScrape() {
     ],
   );
 
+  const resumeScraping = useCallback(
+    async (media: ScrapeMedia, startFromSourceId: string) => {
+      return startScraping(media, startFromSourceId);
+    },
+    [startScraping],
+  );
+
   return {
     startScraping,
+    resumeScraping,
     sourceOrder,
     sources,
     currentSource,

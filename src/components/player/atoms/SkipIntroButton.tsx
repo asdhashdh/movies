@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { useCallback } from "react";
 
 import { Icon, Icons } from "@/components/Icon";
+import { useSkipTracking } from "@/components/player/hooks/useSkipTracking";
 import { Transition } from "@/components/utils/Transition";
 import { usePlayerStore } from "@/stores/player/store";
 
@@ -47,6 +48,8 @@ export function SkipIntroButton(props: {
   const time = usePlayerStore((s) => s.progress.time);
   const status = usePlayerStore((s) => s.status);
   const display = usePlayerStore((s) => s.display);
+  const meta = usePlayerStore((s) => s.meta);
+  const { addSkipEvent } = useSkipTracking(30);
   const showingState = shouldShowSkipButton(time, props.skipTime);
   const animation = showingState === "hover" ? "slide-up" : "fade";
   let bottom = "bottom-[calc(6rem+env(safe-area-inset-bottom))]";
@@ -55,11 +58,39 @@ export function SkipIntroButton(props: {
       ? bottom
       : "bottom-[calc(3rem+env(safe-area-inset-bottom))]";
   }
+
   const handleSkip = useCallback(() => {
     if (typeof props.skipTime === "number" && display) {
+      const startTime = time;
+      const endTime = props.skipTime;
+      const skipDuration = endTime - startTime;
+
       display.setTime(props.skipTime);
+
+      // Add manual skip event with high confidence (user explicitly clicked skip intro)
+      addSkipEvent({
+        startTime,
+        endTime,
+        skipDuration,
+        confidence: 0.95, // High confidence for explicit user action
+        meta: meta
+          ? {
+              title:
+                meta.type === "show" && meta.episode
+                  ? `${meta.title} - S${meta.season?.number || 0}E${meta.episode.number || 0}`
+                  : meta.title,
+              type: meta.type === "movie" ? "Movie" : "TV Show",
+              tmdbId: meta.tmdbId,
+              seasonNumber: meta.season?.number,
+              episodeNumber: meta.episode?.number,
+            }
+          : undefined,
+      });
+
+      // eslint-disable-next-line no-console
+      console.log(`Skip intro button used: ${skipDuration}s total`);
     }
-  }, [props.skipTime, display]);
+  }, [props.skipTime, display, time, addSkipEvent, meta]);
   if (!props.inControl) return null;
 
   let show = false;

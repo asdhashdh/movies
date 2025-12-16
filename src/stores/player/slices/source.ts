@@ -89,6 +89,8 @@ export interface SourceSlice {
     asTrack: boolean;
   };
   meta: PlayerMeta | null;
+  failedSources: string[];
+  failedEmbeds: Record<string, string[]>; // sourceId -> array of failed embedIds
   setStatus(status: PlayerStatus): void;
   setSource(
     stream: SourceSliceSource,
@@ -104,6 +106,11 @@ export interface SourceSlice {
   redisplaySource(startAt: number): void;
   setCaptionAsTrack(asTrack: boolean): void;
   addExternalSubtitles(): Promise<void>;
+  addFailedSource(sourceId: string): void;
+  addFailedEmbed(sourceId: string, embedId: string): void;
+  clearFailedSources(): void;
+  clearFailedEmbeds(): void;
+  reset(): void;
 }
 
 export function metaToScrapeMedia(meta: PlayerMeta): ScrapeMedia {
@@ -141,6 +148,8 @@ export const createSourceSlice: MakeSlice<SourceSlice> = (set, get) => ({
   currentAudioTrack: null,
   status: playerStatus.IDLE,
   meta: null,
+  failedSources: [],
+  failedEmbeds: {},
   caption: {
     selected: null,
     asTrack: false,
@@ -149,6 +158,7 @@ export const createSourceSlice: MakeSlice<SourceSlice> = (set, get) => ({
     set((s) => {
       s.status = playerStatus.PLAYING;
       s.sourceId = id;
+      s.embedId = null;
     });
   },
   setEmbedId(id) {
@@ -254,6 +264,54 @@ export const createSourceSlice: MakeSlice<SourceSlice> = (set, get) => ({
   setCaptionAsTrack(asTrack: boolean) {
     set((s) => {
       s.caption.asTrack = asTrack;
+    });
+  },
+  addFailedSource(sourceId: string) {
+    set((s) => {
+      if (!s.failedSources.includes(sourceId)) {
+        s.failedSources = [...s.failedSources, sourceId];
+      }
+    });
+  },
+  addFailedEmbed(sourceId: string, embedId: string) {
+    set((s) => {
+      if (!s.failedEmbeds[sourceId]) {
+        s.failedEmbeds[sourceId] = [];
+      }
+      if (!s.failedEmbeds[sourceId].includes(embedId)) {
+        s.failedEmbeds[sourceId] = [...s.failedEmbeds[sourceId], embedId];
+      }
+    });
+  },
+  clearFailedSources() {
+    set((s) => {
+      s.failedSources = [];
+    });
+  },
+  clearFailedEmbeds() {
+    set((s) => {
+      s.failedEmbeds = {};
+    });
+  },
+  reset() {
+    set((s) => {
+      s.source = null;
+      s.sourceId = null;
+      s.embedId = null;
+      s.qualities = [];
+      s.audioTracks = [];
+      s.captionList = [];
+      s.isLoadingExternalSubtitles = false;
+      s.currentQuality = null;
+      s.currentAudioTrack = null;
+      s.status = playerStatus.IDLE;
+      s.meta = null;
+      s.failedSources = [];
+      s.failedEmbeds = {};
+      s.caption = {
+        selected: null,
+        asTrack: false,
+      };
     });
   },
   async addExternalSubtitles() {

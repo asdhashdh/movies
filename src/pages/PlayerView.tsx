@@ -25,6 +25,7 @@ import { ScrapingPart } from "@/pages/parts/player/ScrapingPart";
 import { SourceSelectPart } from "@/pages/parts/player/SourceSelectPart";
 import { useLastNonPlayerLink } from "@/stores/history";
 import { PlayerMeta, playerStatus } from "@/stores/player/slices/source";
+import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
 import { getProgressPercentage, useProgressStore } from "@/stores/progress";
 import { needsOnboarding } from "@/utils/onboarding";
@@ -41,6 +42,9 @@ export function RealPlayerView() {
     sources: Record<string, ScrapingSegment>;
     sourceOrder: ScrapingItems[];
   } | null>(null);
+  const [resumeFromSourceId, setResumeFromSourceId] = useState<string | null>(
+    null,
+  );
   const [startAtParam] = useQueryParam("t");
   const {
     status,
@@ -51,14 +55,25 @@ export function RealPlayerView() {
     setShouldStartFromBeginning,
     setStatus,
   } = usePlayer();
+  const sourceId = usePlayerStore((s) => s.sourceId);
   const { setPlayerMeta, scrapeMedia } = usePlayerMeta();
   const backUrl = useLastNonPlayerLink();
   const manualSourceSelection = usePreferencesStore(
     (s) => s.manualSourceSelection,
   );
+  const setLastSuccessfulSource = usePreferencesStore(
+    (s) => s.setLastSuccessfulSource,
+  );
   const router = useOverlayRouter("settings");
   const openedWatchPartyRef = useRef<boolean>(false);
   const progressItems = useProgressStore((s) => s.items);
+
+  // Reset last successful source when leaving the player
+  useEffect(() => {
+    return () => {
+      setLastSuccessfulSource(null);
+    };
+  }, [setLastSuccessfulSource]);
 
   const paramsData = JSON.stringify({
     media: params.media,
@@ -148,12 +163,29 @@ export function RealPlayerView() {
     setStatus(playerStatus.SCRAPING);
   }, [setShouldStartFromBeginning, setStatus]);
 
+  const handleResumeScraping = useCallback(
+    (startFromSourceId: string) => {
+      // Set resume source first
+      setResumeFromSourceId(startFromSourceId);
+      // Then change status in next tick to ensure re-render
+      setTimeout(() => {
+        setStatus(playerStatus.SCRAPING);
+      }, 0);
+    },
+    [setStatus],
+  );
+
   const playAfterScrape = useCallback(
     (out: RunOutput | null) => {
       if (!out) return;
 
       let startAt: number | undefined;
       if (startAtParam) startAt = parseTimestamp(startAtParam) ?? undefined;
+
+      // Clear failed sources and embeds when we successfully find a working source
+      const playerStore = usePlayerStore.getState();
+      playerStore.clearFailedSources();
+      playerStore.clearFailedEmbeds();
 
       playMedia(
         convertRunoutputToSource(out),
@@ -188,13 +220,17 @@ export function RealPlayerView() {
           <SourceSelectPart media={scrapeMedia} />
         ) : (
           <ScrapingPart
+            key={`scraping-${resumeFromSourceId || "default"}`}
             media={scrapeMedia}
+            startFromSourceId={resumeFromSourceId || undefined}
             onResult={(sources, sourceOrder) => {
               setErrorData({
                 sourceOrder,
                 sources,
               });
               setScrapeNotFound();
+              // Clear resume state after scraping
+              setResumeFromSourceId(null);
             }}
             onGetStream={playAfterScrape}
           />
@@ -203,7 +239,12 @@ export function RealPlayerView() {
       {status === playerStatus.SCRAPE_NOT_FOUND && errorData ? (
         <ScrapeErrorPart data={errorData} />
       ) : null}
-      {status === playerStatus.PLAYBACK_ERROR ? <PlaybackErrorPart /> : null}
+      {status === playerStatus.PLAYBACK_ERROR ? (
+        <PlaybackErrorPart
+          onResume={handleResumeScraping}
+          currentSourceId={sourceId}
+        />
+      ) : null}
     </PlayerPart>
   );
 }
